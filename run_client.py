@@ -1,15 +1,15 @@
 import signal
 
-from game.client_ui import WerewolfClientUI
+from game.client_controller import WerewolfClientController
 from network.client import WerewolfNetworkClient
 
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 if __name__ == '__main__':
-    client = WerewolfNetworkClient('localhost', 27015)
-    ui = WerewolfClientUI(client)
-    client.set_ui(ui)
-    client.connect()
-    client.run()
-    ui.app.mainloop()
+    network_client = WerewolfNetworkClient('localhost', 27015)
+    controller = WerewolfClientController(network_client)
+    network_client.set_controller(controller)
+    network_client.connect()
+    network_client.run()
+    controller.ui.mainloop()

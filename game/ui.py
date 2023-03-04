@@ -1,32 +1,5 @@
-import datetime
-import time
 import customtkinter as ctk
-import json
-from network.client import WerewolfNetworkClient
-
-
-class WerewolfClientUI():
-    def __init__(self, client: WerewolfNetworkClient):
-        self.client = client
-        self.players = [0, 1, 2, 3, 4, 5]
-        self.app = UI(self)
-
-    def set_client(self, client):
-        self.client = client
-
-    def connect(self):
-        pass
-
-    def disconnect(self):
-        pass
-
-    def send_message(self, json_msg):
-        self.client.send_message(json.dumps(json_msg))
-
-    def handle_message(self, message):
-        # if message.action == "VOTE":
-        #     print(message)
-        pass
+import datetime
 
 
 class UI(ctk.CTk):
@@ -37,6 +10,8 @@ class UI(ctk.CTk):
         self.geometry("920x480")
         self.title("Weerwolven")
         self.minsize(300, 200)
+
+        self.is_daytime = True
 
         # configure grid layout (3x3)
         self.grid_rowconfigure((1), weight=1)
@@ -52,12 +27,16 @@ class UI(ctk.CTk):
 
         # Role text
         self.role_label = ctk.CTkLabel(self, text="Role", font=ctk.CTkFont(size=42, weight="bold"))
-        self.role_label.grid(row=1, column=1, padx=(0, 100), pady=(0, 75), sticky="nsew")
+        self.role_label.grid(row=1, column=1, padx=(0, 150), pady=(0, 75), sticky="nsew")
 
         # Timer
         self.timer_label = ctk.CTkLabel(self, text="0.0", font=ctk.CTkFont(size=42, weight="bold"))
         self.timer_label.grid(row=0, column=1, padx=(0, 25), pady=(10, 0), sticky="e")
         self.update_timer()
+
+        # Living state text
+        self.state_label = ctk.CTkLabel(self, text="Still alive", font=ctk.CTkFont(size=28, weight="bold"))
+        self.state_label.grid(row=2, column=1, padx=(0, 25), pady=(0, 10), sticky="e")
 
         # Right side frame with players and statuses
         self.sidebar_frame = ctk.CTkFrame(self, width=500, corner_radius=0)
@@ -82,11 +61,19 @@ class UI(ctk.CTk):
         self.after(1000, self.update_timer)
 
     def update_day_state(self, state):
-        self.daytime_label.configure(text=state)
+        self.is_daytime = state
+        text = "The sun has risen" if self.is_daytime else "Night has come"
+        self.daytime_label.configure(text=text)
 
-    def change_scaling_event(self, new_scaling: str):
-        new_scaling_float = int(new_scaling.replace("%", "")) / 100
-        ctk.set_widget_scaling(new_scaling_float)
+    def update_living(self, is_alive):
+        text = "Still alive" if self.controller.player.is_alive else "X_X"
+        self.state_label.configure(text=text)
+
+    def update_muted(self, is_muted):
+        pass
+
+    def update_deafened(self, is_deafened):
+        pass
 
 
 class PlayerName(ctk.CTkFrame):
