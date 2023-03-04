@@ -7,10 +7,10 @@ from network.client import WerewolfNetworkClient
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 if __name__ == '__main__':
-    ui = WerewolfClientUI()
     client = WerewolfNetworkClient('localhost', 27015)
-    ui.set_client(client)
+    ui = WerewolfClientUI(client)
     client.set_ui(ui)
     client.connect()
     client.run()
-    ui.run()
+    ui.app.mainloop()
+    # ui.run()

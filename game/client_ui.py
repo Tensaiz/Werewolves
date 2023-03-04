@@ -1,13 +1,14 @@
 import tkinter
 import tkinter.messagebox
 import customtkinter as ctk
+import json
+from network.client import WerewolfNetworkClient
 
 
 class WerewolfClientUI():
-    def __init__(self):
-        self.client = None
-        app = UI()
-        app.mainloop()
+    def __init__(self, client: WerewolfNetworkClient):
+        self.client = client
+        self.app = UI()
 
     def set_client(self, client):
         self.client = client
@@ -18,10 +19,12 @@ class WerewolfClientUI():
     def disconnect(self):
         pass
 
-    def send_message(self):
-        message = self.input_entry.get()
-        self.input_entry.delete(0, 'end')
-        self.client.send_text(message)
+    def send_message(self, json_msg):
+        self.client.send_message(json.dumps(json_msg))
+
+    def handle_message(self, message):
+        if message.action == "VOTE":
+            print(message)
 
 
 class UI(ctk.CTk):
