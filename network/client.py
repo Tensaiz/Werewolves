@@ -39,11 +39,6 @@ class WerewolfNetworkClient:
     def connect(self):
         self.tcp_socket.connect((self.host, self.port))
         self.udp_socket.connect((self.host, self.port + 1))
-        
-        self.send_message(json.dumps({
-            "sender": "me",
-            "data": "hi"
-        }))
         print('Connected to server')
 
     def send_message(self, message):

@@ -30,7 +30,7 @@ class WerewolfClientUI():
 
 
 class UI(ctk.CTk):
-    def __init__(self, controller):
+    def __init__(self, controller: WerewolfClientUI):
         super().__init__()
         self.controller = controller
         self.player_frame_list = []
@@ -73,7 +73,7 @@ class UI(ctk.CTk):
 
         # Player objects
         for i, player in enumerate(self.controller.players):
-            self.player_frame_list.append(PlayerName(self.client_list, player))
+            self.player_frame_list.append(PlayerName(self.client_list, player, self.vote_player))
             self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
 
     def update_timer(self, t=None):
@@ -84,13 +84,21 @@ class UI(ctk.CTk):
     def update_day_state(self, state):
         self.daytime_label.configure(text=state)
 
+    def vote_player(self, player_id):
+        pass
+        # self.controller.send_message({
+        #     "action": "VOTE",
+        #     "player": player_id,
+        #     "sender": "Mathijs"
+        # })
+
     def change_scaling_event(self, new_scaling: str):
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
         ctk.set_widget_scaling(new_scaling_float)
 
 
 class PlayerName(ctk.CTkFrame):
-    def __init__(self, master, name):
+    def __init__(self, master, name, vote_callback):
         super().__init__(master)
         self.name = name
         self.height = 100
@@ -100,5 +108,5 @@ class PlayerName(ctk.CTkFrame):
         self.label = ctk.CTkLabel(self, text=str(self.name), font=ctk.CTkFont(size=12, weight="bold"))
         self.label.grid(row=0, column=0, padx=20, pady=10, sticky="nsew")
 
-        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"))
+        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=name: vote_callback(p))
         self.vote.grid(row=0, column=1, padx=(0, 10), pady=10)
