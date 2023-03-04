@@ -115,7 +115,10 @@ class GameProgression():
             self.assign_roles()
             self.server.broadcast({
                 "action": "START_GAME",
-                "players": self.map_players()
+                "players": self.map_players(),
+                "base_round_time": self.base_round_time,
+                "werewolf_round_time": self.werewolf_round_time,
+                "transition_time": self.transition_time
             })
 
         self.round_timer = Timer(self.base_round_time, lambda: self.finish_voting("base"))
