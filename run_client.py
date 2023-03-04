@@ -13,4 +13,4 @@ if __name__ == '__main__':
     client.set_ui(ui)
     client.connect()
     client.run()
-    ui.run()
+    ui.app.mainloop()
