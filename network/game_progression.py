@@ -1,7 +1,6 @@
 import json
 import collections
 from typing import List
-from server import WerewolfServer, ServerClientThread
 from threading import Timer
 import time
 import uuid
@@ -35,7 +34,7 @@ Roles
 
 
 class Player():
-    def __init__(self, name, id, client: ServerClientThread) -> None:
+    def __init__(self, name, id, client) -> None:
         self.name = name
         self.id = id
         self.client = client
@@ -46,7 +45,7 @@ class Player():
 
 
 class GameProgression():
-    def __init__(self, server: WerewolfServer) -> None:
+    def __init__(self, server) -> None:
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
         self.round = 0
@@ -83,7 +82,7 @@ class GameProgression():
             "players": self.map_pregame_players()
         })
 
-    def remove_player(self, client: ServerClientThread):
+    def remove_player(self, client):
         removable = None
         for p in self.players:
             if p.client == client:

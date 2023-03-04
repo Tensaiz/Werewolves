@@ -1,6 +1,7 @@
 class Role:
-    def __init__(self, name):
+    def __init__(self, name, role_id):
         self.name = name
+        self.id = role_id
 
     def do_action(self):
         pass

@@ -3,7 +3,7 @@ import socket
 import threading
 from typing import List
 
-from game_progression import GameProgression
+from network.game_progression import GameProgression
 
 
 class WerewolfServer:
@@ -14,7 +14,7 @@ class WerewolfServer:
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.tcp_clients: List[ServerClientThread] = []
         self.udp_client_addresses = []
-        self.game_progression: GameProgression = GameProgression()
+        self.game_progression: GameProgression = GameProgression(self)
 
     def start(self):
         self.tcp_socket.bind((self.host, self.port))
