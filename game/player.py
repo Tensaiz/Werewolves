@@ -1,5 +1,5 @@
 class Player():
-    def __init__(self, name, id=None, role = None, is_alive = True, is_muted = False, is_deafened = False):
+    def __init__(self, name, id=None, role=None, is_alive=True, is_muted=False, is_deafened=False):
         self.id = None
         self.name = name
         self.role = role

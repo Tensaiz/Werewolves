@@ -27,7 +27,6 @@ class UI(ctk.CTk):
         self.timer_label.grid(row=0, column=2, padx=(0, 25), pady=(10, 0), sticky="e")
         self.update_timer()
 
-
         # Mute button
         self.mute_button = ctk.CTkButton(self, width=100, text="Mute", font=ctk.CTkFont(size=12, weight="bold"), command=self.toggle_mute)
         self.mute_button.grid(row=2, column=0, padx=(25, 25), pady=(10, 10), sticky="w")
