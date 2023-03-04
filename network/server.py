@@ -1,6 +1,9 @@
+import json
 import socket
 import threading
 from typing import List
+
+from network.game_progression import GameProgression
 
 
 class WerewolfServer:
@@ -11,6 +14,7 @@ class WerewolfServer:
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.tcp_clients: List[ServerClientThread] = []
         self.udp_client_addresses = []
+        self.game_progression: GameProgression = GameProgression(self)
 
     def start(self):
         self.tcp_socket.bind((self.host, self.port))
@@ -45,10 +49,13 @@ class WerewolfServer:
 
     def remove_client(self, client):
         self.tcp_clients.remove(client)
+        self.game_progression.remove_player(client)
+
+        # TODO: Remove UDP client with same IP
 
 
 class ServerClientThread(threading.Thread):
-    def __init__(self, socket, address, server):
+    def __init__(self, socket, address, server: WerewolfServer):
         super().__init__()
         self.socket = socket
         self.address = address
@@ -62,9 +69,12 @@ class ServerClientThread(threading.Thread):
                 if not data:
                     self.server.remove_client(self)
                     break
-                self.server.broadcast(data)
+                self.server.game_progression.process(data, self)
+                # self.server.broadcast(data)
         except (ConnectionResetError):
             print(f"Client {self.address} disconnected.")
+            self.server.remove_client(self)
 
     def send(self, message):
+        message = json.dumps(message).encode("utf-8")
         self.socket.send(message)

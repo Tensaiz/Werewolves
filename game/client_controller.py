@@ -8,13 +8,13 @@ from game.utils import Utils
 
 class WerewolfClientController():
     def __init__(self, client: WerewolfNetworkClient):
-        self.networkclient = client
+        self.network_client = client
         self.player = Player("Test")
         self.players = []
         self.ui = UI(self)
 
-    def set_networkclient(self, networkclient: WerewolfNetworkClient):
-        self.networkclient = networkclient
+    def set_networkclient(self, network_client: WerewolfNetworkClient):
+        self.network_client = network_client
 
     def connect(self):
         pass
@@ -50,7 +50,7 @@ class WerewolfClientController():
         elif message.action == "FINISH_GAME":
             # winner: 0 -> villager, 1 -> werewolf
             # Players list
-            pass
+            self.finalize_game_ui(message)
 
     def set_id(self, message):
         self.player.id = message['id']
@@ -82,14 +82,23 @@ class WerewolfClientController():
 
     def update_deafened(self, deafened):
         self.ui.update_deafened(deafened)
-        self.networkclient.update_deafened(deafened)
+        self.network_client.update_deafened(deafened)
 
     def update_muted(self, muted):
         self.ui.update_muted(muted)
-        self.networkclient.update_muted(muted)
+        self.network_client.update_muted(muted)
 
     def handle_base_vote(self, message):
-        pass
+        # todo handle vote
+        self.update_players(message)
 
     def handle_werewolf_vote(self, message):
-        pass
+        # todo handle vote
+        self.update_players(message)
+
+    def finalize_game_ui(self, message):
+        if message.winner == 0:
+            self.ui.villagers_win()
+        elif message.winner == 1:
+            self.ui.werewolves_win()
+

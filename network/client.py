@@ -45,13 +45,6 @@ class WerewolfNetworkClient:
     def connect(self):
         self.tcp_socket.connect((self.host, self.port))
         self.udp_socket.connect((self.host, self.port + 1))
-
-        self.send_message(json.dumps({
-            "sender": "me",
-            "data": "hi"
-        }))
-
-
         print('Connected to server')
 
     def send_message(self, message):
@@ -97,6 +90,9 @@ class WerewolfNetworkClient:
 
     def update_muted(self, muted):
         self.is_muted = muted
+
+    def toggle_mute(self):
+        self.is_muted = ~self.is_muted
 
     def update_deafened(self, deafened):
         self.is_deafened = deafened
