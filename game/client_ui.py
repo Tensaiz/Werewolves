@@ -1,5 +1,5 @@
-import tkinter
-import tkinter.messagebox
+import datetime
+import time
 import customtkinter as ctk
 import json
 from network.client import WerewolfNetworkClient
@@ -24,8 +24,9 @@ class WerewolfClientUI():
         self.client.send_message(json.dumps(json_msg))
 
     def handle_message(self, message):
-        if message.action == "VOTE":
-            print(message)
+        # if message.action == "VOTE":
+        #     print(message)
+        pass
 
 
 class UI(ctk.CTk):
@@ -33,19 +34,30 @@ class UI(ctk.CTk):
         super().__init__()
         self.controller = controller
         self.player_frame_list = []
-        self.geometry("1280x720")
+        self.geometry("920x480")
         self.title("Weerwolven")
         self.minsize(300, 200)
 
         # configure grid layout (3x3)
-        self.grid_rowconfigure((1, 2), weight=1)
+        self.grid_rowconfigure((1), weight=1)
         self.grid_columnconfigure(1, weight=1)
 
         # Day / night text top left
         self.daytime_label = ctk.CTkLabel(self, text="The sun has risen", font=ctk.CTkFont(size=20, weight="bold"))
         self.daytime_label.grid(row=0, column=0, pady=(20, 20), padx=(20))
 
+        # Mute button
+        self.vote = ctk.CTkButton(self, width=100, text="Mute", font=ctk.CTkFont(size=12, weight="bold"))
+        self.vote.grid(row=2, column=0, padx=(10, 10), pady=(10, 10))
 
+        # Role text
+        self.role_label = ctk.CTkLabel(self, text="Role", font=ctk.CTkFont(size=42, weight="bold"))
+        self.role_label.grid(row=1, column=1, padx=(0, 100), pady=(0, 75), sticky="nsew")
+
+        # Timer
+        self.timer_label = ctk.CTkLabel(self, text="0.0", font=ctk.CTkFont(size=42, weight="bold"))
+        self.timer_label.grid(row=0, column=1, padx=(0, 25), pady=(10, 0), sticky="e")
+        self.update_timer()
 
         # Right side frame with players and statuses
         self.sidebar_frame = ctk.CTkFrame(self, width=500, corner_radius=0)
@@ -64,19 +76,17 @@ class UI(ctk.CTk):
             self.player_frame_list.append(PlayerName(self.client_list, player))
             self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
 
+    def update_timer(self, t=None):
+        t = 60 - datetime.datetime.now().second
+        self.timer_label.configure(text=t)
+        self.after(1000, self.update_timer)
+
+    def update_day_state(self, state):
+        self.daytime_label.configure(text=state)
 
     def change_scaling_event(self, new_scaling: str):
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
         ctk.set_widget_scaling(new_scaling_float)
-
-    def sidebar_button_event(self):
-        print("sidebar_button click")
-
-    def change_appearance_mode_event(self, new_appearance_mode: str):
-        ctk.set_appearance_mode(new_appearance_mode)
-
-    def button_callback(self):
-        self.textbox.insert("insert", self.combobox.get() + "\n")
 
 
 class PlayerName(ctk.CTkFrame):
