@@ -9,17 +9,17 @@ import random
 """
 Game agenda
 
-Discussion + voting: x secs
+0 Discussion + voting: x secs
 
-Mini-transition: 3 secs
+1 Mini-transition: 3 secs
 
 Announcement base vote
 
 Transition: 5 secs
 
-Werewolf voting: y secs
+2 Werewolf voting: y secs
 
-Transition: 5 secs
+3 Transition: 5 secs
 
 Announcement werewolf vote
 
@@ -200,6 +200,9 @@ class GameProgression():
             votes = self.base_votes[self.round]
         elif type == "werewolf":
             votes = self.werewolf_votes[self.round]
+
+        if len(votes) == 0:
+            return False
 
         counter = collections.Counter(list(votes.values()))
         most_common_amount = 2 if len(counter) > 1 else 1
