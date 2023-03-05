@@ -15,7 +15,7 @@ class UI(ctk.CTk):
         self.title("Weerwolven")
         self.minsize(400, 500)
         self.maxsize(500, 700)
-        
+
         self.is_pregame_lobby = True
         self.is_daytime = True
 
@@ -52,7 +52,7 @@ class UI(ctk.CTk):
 
     def update_timer(self, t):
         self.timer_label.configure(text=t)
-        
+
         if t > 0:
             self.after(1000, lambda: self.update_timer(t - 1))
 
@@ -126,10 +126,17 @@ class UI(ctk.CTk):
                     self.player_frame_list[i].after(200, self.player_frame_list[i].destroy)
                     self.player_frame_list[i] = PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player)
                     self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
+                else:
+                    self.player_frame_list[i].player = player
+                    if not self.is_pregame_lobby:
+                        if self.controller.show_vote_button(player):
+                            self.player_frame_list[i].add_vote_button(self.vote_player)
+                        else:
+                            self.player_frame_list[i].hide_vote_button()
             else:
                 self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player))
                 self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
-        
+
         if len(current_players) > len(self.controller.players):
             for i in range(len(self.controller.players), len(current_players)):
                 self.player_frame_list[i].destroy()
@@ -190,7 +197,6 @@ class UI(ctk.CTk):
         self.controller.start_game()
 
     def purge_pregame_widgets(self):
-        print(self.pregame_label)
         self.pregame_label.grid_remove()
         self.player_count.grid_remove()
         self.player_required_count.grid_remove()
@@ -203,6 +209,7 @@ class PlayerName(ctk.CTkFrame):
         self.player = player
         self.controller = controller
         self.player_name = player.name
+        self.vote = None
         self.height = 100
 
         player_id = player.id
@@ -215,5 +222,13 @@ class PlayerName(ctk.CTkFrame):
         self.label.grid(row=0, column=0, padx=20, pady=10, sticky="nsew")
 
         if not is_pregame_lobby:
-            self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=player_id: vote_callback(p))
-            self.vote.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
+            if self.controller.show_vote_button(self.player):
+                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=player_id: vote_callback(p))
+                self.vote.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
+
+    def add_vote_button(self, vote_callback):
+        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=self.player.id: vote_callback(p))
+        self.vote.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
+
+    def hide_vote_button(self):
+        self.vote.grid_forget()

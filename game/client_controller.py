@@ -179,6 +179,17 @@ class WerewolfClientController():
         elif message.winner == 1:
             self.ui.werewolves_win()
 
+    def show_vote_button(self, player):
+        # Everyone during voting day
+        if not player.is_alive:
+            return False
+        if self.phase == 0:
+            return True
+        # Werewolf at night
+        if self.phase == 2 and player.role == 1:
+            return True
+        return False
+
     def vote_player(self, player_id):
         if self.phase == 0:
             vote = 'BASE_VOTE'
