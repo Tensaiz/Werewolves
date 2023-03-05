@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import tkinter
 
+
 class AuthenticationUI(ctk.CTkToplevel):
     def __init__(self, controller):
         super().__init__()
