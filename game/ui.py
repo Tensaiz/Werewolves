@@ -34,6 +34,8 @@ class UI(ctk.CTk):
         # Player objects
         self.update_players_list()
 
+        self.voted_id = -1
+
         self.draw_bottom()
 
     def init_pregame_vars(self):
@@ -46,11 +48,6 @@ class UI(ctk.CTk):
         self.timer_label = None
         self.deafened_label = None
         self.state_label = None
-
-    def update_timer(self, t=None):
-        t = 60 - datetime.datetime.now().second
-        self.timer_label.configure(text=t)
-        self.after(1000, self.update_timer)
 
     def update_window(self):
         self.draw_top()
@@ -68,10 +65,8 @@ class UI(ctk.CTk):
 
             if self.timer_label is None:
                 # Timer
-                self.timer_label = ctk.CTkLabel(self, text="0.0", font=ctk.CTkFont(size=21, weight="bold"))
+                self.timer_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=21, weight="bold"))
                 self.timer_label.grid(row=0, column=2, padx=(0, 25), pady=(10, 10), sticky="e")
-            self.update_timer()
-
         else:
             # Pre game lobby label
             if self.pregame_label is None:
@@ -124,8 +119,8 @@ class UI(ctk.CTk):
             self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player))
             self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
 
-    def update_day_state(self, state):
-        self.is_daytime = state
+    def update_day_state(self, is_day):
+        self.is_daytime = is_day
         text = "The sun has risen" if self.is_daytime else "Night has come"
         self.daytime_label.configure(text=text)
 
@@ -149,6 +144,12 @@ class UI(ctk.CTk):
 
     def vote_player(self, player_id):
         self.controller.vote_player(player_id)
+        self.mark_voted(player_id)
+
+    def mark_voted(self, player_id):
+        for player_frame in self.player_frame_list:
+            if player_frame.player.id == player_id:
+                player_frame.label.configure(text=player_frame.player.name + ' (voted)')
 
     def werewolves_win(self):
         for player_frame in self.player_frame_list:
@@ -193,7 +194,7 @@ class PlayerName(ctk.CTkFrame):
 
         textcolor = 'red' if self.controller.player.role == 1 and player.role == 1 else None
 
-        self.label = ctk.CTkLabel(self, text=str(self.player_name), text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"))
+        self.label = ctk.CTkLabel(self, text=self.player_name, text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"))
         self.label.grid(row=0, column=0, padx=20, pady=10, sticky="nsew")
 
         if not is_pregame_lobby:

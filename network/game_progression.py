@@ -58,7 +58,7 @@ class GameProgression():
 
     def process(self, message, sender):
         message = json.loads(message.decode('utf-8'))
-        
+
         if message["action"] == "REGISTER_PLAYER":
             self.register_player(message, sender)
         elif message["action"] == "START_GAME":

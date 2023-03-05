@@ -11,13 +11,19 @@ from game.message import Message
 
 class WerewolfClientController():
     def __init__(self, network_client: WerewolfNetworkClient = None):
-        self.MIN_PLAYERS = 5
+        self.MIN_PLAYERS = 1
 
         self.player = Player("Test")
         self.players = []
         self.ui = UI(self)
         self.auth_ui = AuthenticationUI(self)
         self.network_client = None
+
+        self.round_timer = None
+        self.werewolf_timer = None
+
+        self.round_time = -1
+        self.wolves_time = -1
 
         self.base_round_time = -1
         self.werewolf_round_time = -1
@@ -85,7 +91,7 @@ class WerewolfClientController():
         elif message.action == "FINISH_BASE_VOTE":
             # action, result (1 decisive, else 0), votee (votee name)
             # players
-            self.handle_base_vote(message)
+            self.handle_base_vote_finish(message)
         elif message.action == "FINISH_WEREWOLF_VOTE":
             # action, result (1 decisive, else 0), votee (votee name)
             # players
@@ -106,6 +112,23 @@ class WerewolfClientController():
         self.transition_time = message.transition_time
 
         self.ui.purge_pregame_widgets()
+        self.start_game_progress()
+
+    def start_game_progress(self):
+        self.round_time = self.base_round_time
+        self.ui.after(1000, self.update_time)
+
+    def update_time(self):
+        self.round_time -= 1
+        if self.ui.timer_label:
+            self.ui.timer_label.configure(text=self.round_time)
+        self.ui.after(1000, self.update_time)
+
+    def day_round(self):
+        pass
+
+    def night_round(self):
+        pass
 
     def set_id(self, message):
         self.player.id = message.id
@@ -146,9 +169,13 @@ class WerewolfClientController():
         self.ui.update_muted(muted)
         self.network_client.update_muted(muted)
 
-    def handle_base_vote(self, message):
+    def handle_base_vote_finish(self, message):
         # todo handle vote
         self.update_players(message)
+        self.night()
+
+    def night(self):
+        self.ui.update_day_state(False)
 
     def handle_werewolf_vote(self, message):
         # todo handle vote
@@ -161,4 +188,13 @@ class WerewolfClientController():
             self.ui.werewolves_win()
 
     def vote_player(self, player_id):
-        pass
+        if self.phase == 0:
+            vote = 'BASE_VOTE'
+        elif self.phase == 2:
+            vote = 'WEREWOLF_VOTE'
+        message = {
+            'action': vote,
+            'sender_id': self.player.id,
+            'selected_player_id': player_id
+        }
+        self.send_message(message)
