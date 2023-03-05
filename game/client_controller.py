@@ -11,7 +11,7 @@ from game.message import Message
 
 class WerewolfClientController():
     def __init__(self, network_client: WerewolfNetworkClient = None):
-        self.MIN_PLAYERS = 3
+        self.MIN_PLAYERS = 5
 
         self.player = Player("Test")
         self.players = []
@@ -94,10 +94,10 @@ class WerewolfClientController():
             # winner: 0 -> villager, 1 -> werewolf
             # Players list
             self.finalize_game_ui(message)
+            return
         self.ui.update_window()
 
     def start_game_server(self, message):
-        print('Starting game!')
         self.ui.is_pregame_lobby = False
         self.update_players(message)
 
