@@ -27,5 +27,5 @@ class Utils:
     @staticmethod
     def get_player_by_id(id, players: List[Player]):
         for player in players:
-            if player.id == id:
+            if player['id'] == id:
                 return player

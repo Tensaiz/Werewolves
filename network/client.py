@@ -48,9 +48,8 @@ class WerewolfNetworkClient:
         print('Connected to server')
 
     def send_message(self, message):
-
         # action: START_GAME
-        # action:REGISTERED_PLAYER - name: [name]
+        # action:REGISTER_PLAYER - name: [name]
 
         # action == "BASE_VOTE"
         # action == "WEREWOLF_VOTE"
@@ -58,7 +57,6 @@ class WerewolfNetworkClient:
         # Votes:
         # sender_id
         # selected_player_id
-
         self.tcp_socket.send(message.encode("utf-8"))
 
     def send_audio(self):
@@ -81,6 +79,7 @@ class WerewolfNetworkClient:
             try:
                 message_bytes = self.tcp_socket.recv(self.audio_settings['chunks'])
                 message = json.loads(message_bytes.decode('utf-8'))
+                print(message)
                 self.controller.handle_message(message)
             except ConnectionError:
                 break

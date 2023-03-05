@@ -6,6 +6,14 @@ class Role:
     def do_action(self):
         pass
 
+    @staticmethod
+    def get_role_name_from_id(id):
+        role_name_dict = {
+            0: 'Villager',
+            1: 'Werewolf'
+        }
+        return role_name_dict[id]
+
 
 class Villager(Role):
     def __init__(self):

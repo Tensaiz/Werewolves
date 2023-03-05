@@ -39,7 +39,7 @@ class Player():
         self.id = id
         self.client = client
         self.role = None
-        self.is_alive = None
+        self.is_alive = True
         self.is_muted = False
         self.is_deafened = False
 
@@ -58,6 +58,7 @@ class GameProgression():
 
     def process(self, message, sender):
         message = json.loads(message.decode('utf-8'))
+        
         if message["action"] == "REGISTER_PLAYER":
             self.register_player(message, sender)
         elif message["action"] == "START_GAME":
@@ -69,8 +70,8 @@ class GameProgression():
 
     def register_player(self, message, sender):
         player_name = message["name"]
-        player_id = uuid.uuid4()
-        player = Player(player_name, player_id)
+        player_id = str(uuid.uuid4())
+        player = Player(player_name, player_id, sender)
         self.players.append(player)
         sender.send({
             "action": "REGISTER_PLAYER",
@@ -100,15 +101,6 @@ class GameProgression():
         if self.round_timer:
             return
 
-        winner = self.calculate_winners()
-        if winner >= 0:
-            self.server.broadcast({
-                "action": "FINISH_GAME",
-                "winner": winner,
-                "players": self.map_players()
-            })
-            return
-
         if self.round == 0:
             # Start of the game, assign roles, send players
             self.assign_roles()
@@ -120,6 +112,15 @@ class GameProgression():
                 "transition_time": self.transition_time
             })
 
+        winner = self.calculate_winners()
+        if winner >= 0:
+            self.server.broadcast({
+                "action": "FINISH_GAME",
+                "winner": winner,
+                "players": self.map_players()
+            })
+            return
+
         self.round_timer = Timer(self.base_round_time, lambda: self.finish_voting("base"))
         self.round_timer.start()
 
@@ -127,6 +128,7 @@ class GameProgression():
         alive_players = list(filter(lambda x: x.is_alive, self.players))
         werewolf_count = len(list(filter(lambda x: x.role == 1, alive_players)))
         villager_count = len(list(filter(lambda x: x.role == 0, alive_players)))
+
         if werewolf_count >= villager_count:
             winner = 1
         elif werewolf_count == 0:

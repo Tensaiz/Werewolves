@@ -1,11 +1,15 @@
 class Player():
-    def __init__(self, name, id=None, role=None, is_alive=True, is_muted=False, is_deafened=False):
-        self.id = None
-        self.name = name
-        self.role = role
-        self.is_alive = is_alive
-        self.is_muted = is_muted
-        self.is_deafened = is_deafened
+    def __init__(self, name='', dict_obj=None, id=-1, role=None, is_alive=True, is_muted=False, is_deafened=False):
+        if dict_obj:
+            for key in dict_obj:
+                setattr(self, key, dict_obj[key])
+        else:
+            self.id = id
+            self.name = name
+            self.role = role
+            self.is_alive = is_alive
+            self.is_muted = is_muted
+            self.is_deafened = is_deafened
 
     def reset(self):
         self.role = None
