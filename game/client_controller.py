@@ -11,14 +11,15 @@ from game.message import Message
 
 class WerewolfClientController():
     def __init__(self, network_client: WerewolfNetworkClient = None):
-        self.MIN_PLAYERS = 3
+        self.MIN_PLAYERS = 1
 
         self.player = Player("Test")
         self.players = []
         self.ui = UI(self)
         self.auth_ui = AuthenticationUI(self)
         self.network_client = None
-
+        self.round = 0
+        self.phase = 0
         self.base_round_time = -1
         self.werewolf_round_time = -1
         self.transition_time = -1
@@ -106,6 +107,8 @@ class WerewolfClientController():
         self.transition_time = message.transition_time
 
         self.ui.purge_pregame_widgets()
+        self.ui.after(200, lambda: self.ui.update_timer(self.base_round_time))
+
 
     def set_id(self, message):
         self.player.id = message.id
@@ -149,10 +152,28 @@ class WerewolfClientController():
     def handle_base_vote(self, message):
         # todo handle vote
         self.update_players(message)
+        self.phase = 1
+        self.ui.update_timer(self.transition_time)
+        transition_timer = Timer(self.transition_time, self.transition_phase_base)
+        transition_timer.start()
+        
+    def transition_phase_base(self):
+        self.ui.update_timer(self.werewolf_round_time)
+        self.phase = 2
+        
+        
+    def reset_round(self):
+        self.round += 1
+        self.phase = 0
+        self.ui.update_timer(self.base_round_time)
 
     def handle_werewolf_vote(self, message):
         # todo handle vote
         self.update_players(message)
+        self.phase = 3
+        self.ui.update_timer(self.transition_time)
+        transition_timer = Timer(self.transition_time, self.reset_round)
+        transition_timer.start()
 
     def finalize_game_ui(self, message):
         if message.winner == 0:

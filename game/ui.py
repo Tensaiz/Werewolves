@@ -1,7 +1,7 @@
 import tkinter
 import customtkinter as ctk
 import datetime
-
+import copy
 from game.role import Role
 
 
@@ -12,8 +12,9 @@ class UI(ctk.CTk):
         self.player_frame_list = []
         self.geometry("420x620")
         self.title("Weerwolven")
-        self.minsize(400, 200)
-
+        self.minsize(400, 500)
+        self.maxsize(500, 700)
+        
         self.is_pregame_lobby = True
         self.is_daytime = True
 
@@ -33,10 +34,12 @@ class UI(ctk.CTk):
 
         self.draw_bottom()
 
-    def update_timer(self, t=None):
-        t = 60 - datetime.datetime.now().second
+    def update_timer(self, initial_t):
+        t = initial_t - datetime.datetime.now().second
         self.timer_label.configure(text=t)
-        self.after(1000, self.update_timer)
+        
+        if t > 0:
+            self.after(1000, lambda: self.update_timer(initial_t))
 
     def update_window(self):
         self.draw_top()
@@ -52,7 +55,6 @@ class UI(ctk.CTk):
             # Timer
             self.timer_label = ctk.CTkLabel(self, text="0.0", font=ctk.CTkFont(size=21, weight="bold"))
             self.timer_label.grid(row=0, column=2, padx=(0, 25), pady=(10, 10), sticky="e")
-            self.update_timer()
         else:
             # Pre game lobby label
             self.pregame_label = ctk.CTkLabel(self, text="Pre-game Lobby - Start game when everyone is in", font=ctk.CTkFont(size=12, weight="bold"))
@@ -87,6 +89,23 @@ class UI(ctk.CTk):
             self.start_game_button.grid(row=4, column=1, padx=(10, 10), pady=10, sticky="w")
 
     def update_players_list(self):
+        # current_players = list(map(lambda pn: pn.player, self.player_frame_list))
+        # for i, player in enumerate(self.controller.players):
+        #     if i < len(current_players):
+        #         if current_players[i].id != player.id:
+        #             # other player
+        #             self.player_frame_list[i].after(200, self.player_frame_list[i].destroy)
+        #             self.player_frame_list[i] = PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player)
+        #             self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
+        #     else:
+        #         self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player))
+        #         self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
+        
+        # if len(current_players) > len(self.controller.players):
+        #     for i in range(len(self.controller.players), len(current_players)):
+        #         self.player_frame_list[i].destroy()
+        #         del self.player_frame_list[i]
+                
         for frame in self.player_frame_list:
             frame.destroy()
         self.player_frame_list = []
@@ -144,10 +163,11 @@ class UI(ctk.CTk):
         self.controller.start_game()
 
     def purge_pregame_widgets(self):
-        self.pregame_label.destroy()
-        self.player_count.destroy()
-        self.player_required_count.destroy()
-        self.start_game_button.destroy()
+        print(self.pregame_label)
+        self.pregame_label.grid_remove()
+        self.player_count.grid_remove()
+        self.player_required_count.grid_remove()
+        self.start_game_button.grid_remove()
 
 
 class PlayerName(ctk.CTkFrame):

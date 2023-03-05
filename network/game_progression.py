@@ -9,17 +9,17 @@ import random
 """
 Game agenda
 
-Discussion + voting: x secs
+0 Discussion + voting: x secs
 
-Mini-transition: 3 secs
+1 Mini-transition: 3 secs
 
 Announcement base vote
 
 Transition: 5 secs
 
-Werewolf voting: y secs
+2 Werewolf voting: y secs
 
-Transition: 5 secs
+3 Transition: 5 secs
 
 Announcement werewolf vote
 
