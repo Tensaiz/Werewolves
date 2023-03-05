@@ -201,6 +201,9 @@ class GameProgression():
         elif type == "werewolf":
             votes = self.werewolf_votes[self.round]
 
+        if len(votes) == 0:
+            return False
+
         counter = collections.Counter(list(votes.values()))
         most_common_amount = 2 if len(counter) > 1 else 1
         most_common = counter.most_common(most_common_amount)

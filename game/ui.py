@@ -48,12 +48,11 @@ class UI(ctk.CTk):
         self.deafened_label = None
         self.state_label = None
 
-    def update_timer(self, initial_t):
-        t = initial_t - datetime.datetime.now().second
+    def update_timer(self, t):
         self.timer_label.configure(text=t)
         
         if t > 0:
-            self.after(1000, lambda: self.update_timer(initial_t))
+            self.after(1000, lambda: self.update_timer(t - 1))
 
     def update_window(self):
         self.draw_top()

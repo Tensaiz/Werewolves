@@ -1,7 +1,7 @@
 import json
 from typing import List
 from game.authentication_ui import AuthenticationUI
-
+from threading import Timer
 from game.ui import UI
 from network.client import WerewolfNetworkClient
 from game.player import Player
@@ -107,7 +107,7 @@ class WerewolfClientController():
         self.transition_time = message.transition_time
 
         self.ui.purge_pregame_widgets()
-        self.ui.after(200, lambda: self.ui.update_timer(self.base_round_time))
+        self.ui.after(100, lambda: self.ui.update_timer(self.base_round_time))
 
 
     def set_id(self, message):
@@ -131,11 +131,11 @@ class WerewolfClientController():
 
     def compare_and_update_own_state(self, player: Player):
         if self.player.is_alive != player.is_alive:
-            self.update_living()
+            self.update_living(player.is_alive)
         if self.player.is_deafened != player.is_deafened:
-            self.update_deafened()
+            self.update_deafened(player.is_deafened)
         if self.player.is_muted != player.is_muted:
-            self.update_muted()
+            self.update_muted(player.is_muted)
         self.player = player
 
     def update_living(self, state):
