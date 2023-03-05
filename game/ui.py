@@ -40,6 +40,7 @@ class UI(ctk.CTk):
         self.draw_bottom()
 
     def init_pregame_vars(self):
+        self.current_vote_id = None
         self.pregame_label = None
         self.player_count = None
         self.player_required_count = None
@@ -119,6 +120,7 @@ class UI(ctk.CTk):
 
     def update_players_list(self):
         current_players = list(map(lambda pn: pn.player, self.player_frame_list))
+        can_vote = self.controller.can_vote()
         for i, player in enumerate(self.controller.players):
             if i < len(current_players):
                 if current_players[i].id != player.id:
@@ -128,11 +130,14 @@ class UI(ctk.CTk):
                     self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
                 else:
                     self.player_frame_list[i].player = player
+                    if not player.is_alive:
+                        self.player_frame_list[i].mark_dead()
                     if not self.is_pregame_lobby:
-                        if self.controller.show_vote_button(player):
+                        if can_vote and self.player_frame_list[i].player.id != self.controller.player.id:
                             self.player_frame_list[i].add_vote_button(self.vote_player)
                         else:
-                            self.player_frame_list[i].hide_vote_button()
+                            if self.player_frame_list[i].vote:
+                                self.player_frame_list[i].hide_vote_button()
             else:
                 self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player))
                 self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
@@ -148,7 +153,7 @@ class UI(ctk.CTk):
         self.daytime_label.configure(text=text)
 
     def update_living(self, is_alive):
-        text = "Alive" if self.controller.player.is_alive else "X_X"
+        text = "Alive" if is_alive else "X_X"
         self.state_label.configure(text=text)
 
     def update_muted(self, is_muted):
@@ -168,11 +173,19 @@ class UI(ctk.CTk):
     def vote_player(self, player_id):
         self.controller.vote_player(player_id)
         self.mark_voted(player_id)
+        if self.current_vote_id:
+            self.remove_previous_marks(self.current_vote_id)
+        self.current_vote_id = player_id
 
     def mark_voted(self, player_id):
         for player_frame in self.player_frame_list:
             if player_frame.player.id == player_id:
-                player_frame.label.configure(text=player_frame.player.name + ' (voted)')
+                player_frame.label.configure(text_color='blue')
+
+    def remove_previous_marks(self, previous_votee):
+        for player_frame in self.player_frame_list:
+            if player_frame.player.id == previous_votee:
+                player_frame.label.configure(text_color='white')
 
     def werewolves_win(self):
         for player_frame in self.player_frame_list:
@@ -218,11 +231,13 @@ class PlayerName(ctk.CTkFrame):
 
         textcolor = 'red' if self.controller.player.role == 1 and player.role == 1 else None
 
-        self.label = ctk.CTkLabel(self, text=self.player_name, text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"))
+        text = self.player_name + ' - killed' if not self.player.is_alive else self.player_name
+
+        self.label = ctk.CTkLabel(self, text=text, text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"))
         self.label.grid(row=0, column=0, padx=20, pady=10, sticky="nsew")
 
         if not is_pregame_lobby:
-            if self.controller.show_vote_button(self.player):
+            if self.controller.can_vote() and self.player.id != self.controller.player.id:
                 self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=player_id: vote_callback(p))
                 self.vote.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
 
@@ -232,3 +247,6 @@ class PlayerName(ctk.CTkFrame):
 
     def hide_vote_button(self):
         self.vote.grid_forget()
+
+    def mark_dead(self):
+        self.label.configure(text_color='red')

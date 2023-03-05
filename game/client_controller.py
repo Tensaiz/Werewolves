@@ -11,18 +11,20 @@ from game.message import Message
 
 class WerewolfClientController():
     def __init__(self, network_client: WerewolfNetworkClient = None):
-        self.MIN_PLAYERS = 1
+        self.MIN_PLAYERS = 5
 
         self.player = Player("Test")
         self.players = []
-        self.ui = UI(self)
-        self.auth_ui = AuthenticationUI(self)
-        self.network_client = None
+
         self.round = 0
         self.phase = 0
         self.base_round_time = -1
         self.werewolf_round_time = -1
         self.transition_time = -1
+
+        self.ui = UI(self)
+        self.auth_ui = AuthenticationUI(self)
+        self.network_client = None
 
     def set_networkclient(self, network_client: WerewolfNetworkClient):
         self.network_client = network_client
@@ -95,6 +97,7 @@ class WerewolfClientController():
             # winner: 0 -> villager, 1 -> werewolf
             # Players list
             self.finalize_game_ui(message)
+            self.phase = 4
             return
         self.ui.update_window()
 
@@ -137,8 +140,8 @@ class WerewolfClientController():
             self.update_muted(player.is_muted)
         self.player = player
 
-    def update_living(self, state):
-        self.ui.update_living(state)
+    def update_living(self, is_alive):
+        self.ui.update_living(is_alive)
 
     def update_deafened(self, deafened):
         self.ui.update_deafened(deafened)
@@ -149,7 +152,6 @@ class WerewolfClientController():
         self.network_client.update_muted(muted)
 
     def handle_base_vote_finish(self, message):
-        # todo handle vote
         self.update_players(message)
         self.phase = 1
         self.ui.update_timer(self.transition_time)
@@ -159,14 +161,15 @@ class WerewolfClientController():
     def transition_phase_base(self):
         self.ui.update_timer(self.werewolf_round_time)
         self.phase = 2
+        self.ui.update_window()
 
     def reset_round(self):
         self.round += 1
         self.phase = 0
+        self.ui.update_window()
         self.ui.update_timer(self.base_round_time)
 
     def handle_werewolf_vote(self, message):
-        # todo handle vote
         self.update_players(message)
         self.phase = 3
         self.ui.update_timer(self.transition_time)
@@ -174,19 +177,20 @@ class WerewolfClientController():
         transition_timer.start()
 
     def finalize_game_ui(self, message):
+        self.ui.update_window()
         if message.winner == 0:
             self.ui.villagers_win()
         elif message.winner == 1:
             self.ui.werewolves_win()
 
-    def show_vote_button(self, player):
-        # Everyone during voting day
-        if not player.is_alive:
+    def can_vote(self):
+        if not self.player.is_alive:
             return False
+        # Everyone during voting day
         if self.phase == 0:
             return True
         # Werewolf at night
-        if self.phase == 2 and player.role == 1:
+        if self.phase == 2 and self.player.role == 1:
             return True
         return False
 
