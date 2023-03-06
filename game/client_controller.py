@@ -125,15 +125,12 @@ class WerewolfClientController():
             self.players.append(Player(name=d['name'], id=d['id']))
 
     def update_players(self, message):
-        self.find_self_and_update(message.players)
         self.players = []
-        for player in message.players:
-            self.players.append(Player(dict_obj=player))
-
-    def find_self_and_update(self, players: List[dict]):
-        player = Utils.get_player_by_id(self.player.id, players)
-        player = Player(dict_obj=player)
-        self.compare_and_update_own_state(player)
+        for player_dict in message.players:
+            player = Player(dict_obj=player_dict)
+            if player.id == self.player.id:
+                self.compare_and_update_own_state(player)
+            self.players.append(player)
 
     def compare_and_update_own_state(self, player: Player):
         if self.player.is_alive != player.is_alive:
@@ -188,8 +185,21 @@ class WerewolfClientController():
         self.ui.remove_voting_marks()
 
     def finalize_game_ui(self, message):
+        self.unmute_all_players()
         self.ui.update_window()
         self.ui.show_final_game_ui(message.winner)
+
+    def unmute_all_players(self):
+        self.update_muted(False)
+        self.update_deafened(False)
+        for player in self.players:
+            player.is_muted = False
+            player.is_deafened = False
+
+    def find_self_and_update(self, players):
+        for player in players:
+            if player.id == self.player.id:
+                self.compare_and_update_own_state(player)
 
     def can_vote_on(self, votee):
         if not (self.player.is_alive and votee.is_alive and votee.id != self.player.id and not self.game_is_finished):
