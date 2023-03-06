@@ -12,8 +12,9 @@ from game.message import Message
 class WerewolfClientController():
     def __init__(self, network_client: WerewolfNetworkClient = None):
         self.MIN_PLAYERS = 5
+        self.game_is_finished = False
 
-        self.player = Player("Test")
+        self.player = Player('')
         self.players = []
 
         self.round = 0
@@ -98,6 +99,7 @@ class WerewolfClientController():
             # Players list
             self.finalize_game_ui(message)
             self.phase = 4
+            self.game_is_finished = True
             return
         self.ui.update_window()
 
@@ -154,11 +156,14 @@ class WerewolfClientController():
     def handle_base_vote_finish(self, message):
         self.update_players(message)
         self.phase = 1
+        self.remove_voting_ui()
         self.ui.update_timer(self.transition_time)
         transition_timer = Timer(self.transition_time, self.transition_phase_base)
         transition_timer.start()
 
     def transition_phase_base(self):
+        if self.phase == 4:
+            return
         self.ui.update_timer(self.werewolf_round_time)
         self.phase = 2
         self.ui.update_window()
@@ -172,25 +177,26 @@ class WerewolfClientController():
     def handle_werewolf_vote(self, message):
         self.update_players(message)
         self.phase = 3
+        self.remove_voting_ui()
         self.ui.update_timer(self.transition_time)
         transition_timer = Timer(self.transition_time, self.reset_round)
         transition_timer.start()
 
+    def remove_voting_ui(self):
+        self.ui.remove_voting_marks()
+
     def finalize_game_ui(self, message):
         self.ui.update_window()
-        if message.winner == 0:
-            self.ui.villagers_win()
-        elif message.winner == 1:
-            self.ui.werewolves_win()
+        self.ui.show_final_game_ui(message.winner)
 
-    def can_vote(self):
-        if not self.player.is_alive:
+    def can_vote_on(self, votee):
+        if not (self.player.is_alive and votee.is_alive and votee.id != self.player.id and not self.game_is_finished):
             return False
         # Everyone during voting day
         if self.phase == 0:
             return True
         # Werewolf at night
-        if self.phase == 2 and self.player.role == 1:
+        if self.phase == 2 and self.player.role == 1 and votee.is_alive:
             return True
         return False
 

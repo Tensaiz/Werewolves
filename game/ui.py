@@ -46,6 +46,7 @@ class UI(ctk.CTk):
         self.player_required_count = None
         self.start_game_button = None
         self.mute_button = None
+        self.role_label = None
         self.daytime_label = None
         self.timer_label = None
         self.deafened_label = None
@@ -65,11 +66,17 @@ class UI(ctk.CTk):
 
     def draw_top(self):
         if not self.is_pregame_lobby and self.controller.player.role is not None:
+            if self.role_label is None:
+                self.role_label = ctk.CTkLabel(self, text=f"{Role.get_role_name_from_id(self.controller.player.role)}", font=ctk.CTkFont(size=21, weight="bold"))
+                self.role_label.grid(row=0, column=0, pady=(10, 10), padx=(25, 25), sticky="w")
+            self.role_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role)}")
+
+            day_state = 'Day' if self.controller.phase == 0 or self.controller.phase == 1 else 'Night'
+
             if self.daytime_label is None:
-                # Day / night text top left
-                self.daytime_label = ctk.CTkLabel(self, text=f"{Role.get_role_name_from_id(self.controller.player.role)}", font=ctk.CTkFont(size=21, weight="bold"))
-                self.daytime_label.grid(row=0, column=0, pady=(10, 10), padx=(25, 25), sticky="w")
-            self.daytime_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role)}")
+                self.daytime_label = ctk.CTkLabel(self, text=day_state, font=ctk.CTkFont(size=21, weight="bold"))
+                self.daytime_label.grid(row=0, column=1, pady=(10, 10), padx=(25, 25), sticky="w")
+            self.daytime_label.configure(text=day_state)
 
             if self.timer_label is None:
                 # Timer
@@ -120,7 +127,6 @@ class UI(ctk.CTk):
 
     def update_players_list(self):
         current_players = list(map(lambda pn: pn.player, self.player_frame_list))
-        can_vote = self.controller.can_vote()
         for i, player in enumerate(self.controller.players):
             if i < len(current_players):
                 if current_players[i].id != player.id:
@@ -130,9 +136,10 @@ class UI(ctk.CTk):
                     self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
                 else:
                     self.player_frame_list[i].player = player
-                    if not player.is_alive:
-                        self.player_frame_list[i].mark_dead()
                     if not self.is_pregame_lobby:
+                        if not player.is_alive:
+                            self.player_frame_list[i].mark_dead()
+                        can_vote = self.controller.can_vote_on(self.player_frame_list[i].player)
                         if can_vote and self.player_frame_list[i].player.id != self.controller.player.id:
                             self.player_frame_list[i].add_vote_button(self.vote_player)
                         else:
@@ -150,11 +157,13 @@ class UI(ctk.CTk):
     def update_day_state(self, is_day):
         self.is_daytime = is_day
         text = "The sun has risen" if self.is_daytime else "Night has come"
-        self.daytime_label.configure(text=text)
+        self.role_label.configure(text=text)
 
     def update_living(self, is_alive):
         text = "Alive" if is_alive else "X_X"
         self.state_label.configure(text=text)
+        if not is_alive:
+            self.update_muted(True)
 
     def update_muted(self, is_muted):
         if is_muted:
@@ -187,19 +196,19 @@ class UI(ctk.CTk):
             if player_frame.player.id == previous_votee:
                 player_frame.label.configure(text_color='white')
 
-    def werewolves_win(self):
+    def remove_voting_marks(self):
         for player_frame in self.player_frame_list:
-            if player_frame.player.role == 0:
-                player_frame.label.configure(text_color='red')
-            else:
-                player_frame.label.configure(text_color='green')
+            if player_frame.player.is_alive:
+                player_frame.label.configure(text_color='white')
 
-    def villagers_win(self):
+    def show_final_game_ui(self, winning_team):
         for player_frame in self.player_frame_list:
-            if player_frame.player.role == 0:
+            if player_frame.player.role == winning_team:
                 player_frame.label.configure(text_color='green')
             else:
                 player_frame.label.configure(text_color='red')
+            if player_frame.vote:
+                player_frame.hide_vote_button()
 
     def toggle_mute(self):
         self.controller.network_client.toggle_mute()
@@ -233,17 +242,17 @@ class PlayerName(ctk.CTkFrame):
 
         text = self.player_name + ' - killed' if not self.player.is_alive else self.player_name
 
-        self.label = ctk.CTkLabel(self, text=text, text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"))
-        self.label.grid(row=0, column=0, padx=20, pady=10, sticky="nsew")
+        self.label = ctk.CTkLabel(self, text=text, text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"), anchor="w")
+        self.label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
         if not is_pregame_lobby:
-            if self.controller.can_vote() and self.player.id != self.controller.player.id:
-                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=player_id: vote_callback(p))
-                self.vote.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
+            if self.controller.can_vote_on(player):
+                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold", anchor="e"), command=lambda p=player_id: vote_callback(p))
+                self.vote.grid(row=0, column=1, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 
     def add_vote_button(self, vote_callback):
-        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=self.player.id: vote_callback(p))
-        self.vote.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
+        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), anchor="e", command=lambda p=self.player.id: vote_callback(p))
+        self.vote.grid(row=0, column=1, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 
     def hide_vote_button(self):
         self.vote.grid_forget()

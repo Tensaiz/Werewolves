@@ -112,6 +112,13 @@ class GameProgression():
                 "transition_time": self.transition_time
             })
 
+        if self.game_finished():
+            return
+
+        self.round_timer = Timer(self.base_round_time, lambda: self.finish_voting("base"))
+        self.round_timer.start()
+
+    def game_finished(self):
         winner = self.calculate_winners()
         if winner >= 0:
             self.server.broadcast({
@@ -119,10 +126,8 @@ class GameProgression():
                 "winner": winner,
                 "players": self.map_players()
             })
-            return
-
-        self.round_timer = Timer(self.base_round_time, lambda: self.finish_voting("base"))
-        self.round_timer.start()
+            return True
+        return False
 
     def calculate_winners(self):
         alive_players = list(filter(lambda x: x.is_alive, self.players))
@@ -164,6 +169,9 @@ class GameProgression():
             "players": self.map_players()
         })
 
+        if self.game_finished():
+            return
+
         # Transition to next phase
         if type == "base":
             # Transition to werewolf voting phase
@@ -183,11 +191,11 @@ class GameProgression():
 
     def change_player_audio(self, mute):
         for player in self.players:
-            if not player.is_alive:
-                player.is_muted = True
             if player.role == 0:
                 player.is_deafened = mute if player.is_alive else False
                 player.is_muted = mute
+            if not player.is_alive:
+                player.is_muted = True
 
     def kill_player(self, player_id):
         for player in self.players:
