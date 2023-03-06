@@ -1,4 +1,5 @@
 import json
+from tkinter import PhotoImage
 from typing import List
 from game.authentication_ui import AuthenticationUI
 from threading import Timer
@@ -24,6 +25,7 @@ class WerewolfClientController():
         self.transition_time = -1
 
         self.ui = UI(self)
+        self.ui.iconbitmap(default="resources/werewolves_icon.ico")
         self.auth_ui = AuthenticationUI(self)
         self.network_client = None
 

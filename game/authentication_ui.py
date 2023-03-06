@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from tkinter import messagebox as msgb
 import tkinter
 
 
@@ -6,12 +7,11 @@ class AuthenticationUI(ctk.CTkToplevel):
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
-
+        self.connecting = False
         self.geometry("320x320")
         self.title("Werewolves connector")
         self.minsize(250, 350)
-        
-
+        self.iconbitmap("resources/werewolves_icon.ico")
         self.protocol("WM_DELETE_WINDOW", self.quit)
 
         # configure grid layout (3x3)
@@ -53,10 +53,20 @@ class AuthenticationUI(ctk.CTkToplevel):
         self.connect_button.grid(row=2, column=1, padx=(25, 25), pady=(10, 50), sticky="s")
 
     def connect(self):
+        if self.connecting:
+            return
+
         name = self.name.get()
         ip = self.ip.get()
         port = self.port.get()
 
         if len(name) > 0 and len(ip) > 0 and len(port) > 0:
             print(name, ip, port)
-            self.controller.connect(name, ip, port)
+            try:
+                self.connect_button["state"] = tkinter.DISABLED
+                self.connecting = True
+                self.controller.connect(name, ip, port)
+            except Exception:
+                msgb.askokcancel("Connection", f"Connection to {ip}:{port} failed!")
+                self.connect_button["state"] = tkinter.NORMAL
+                self.connecting = False
