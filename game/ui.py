@@ -1,13 +1,17 @@
 import tkinter
 import customtkinter as ctk
-import datetime
-import copy
 from game.role import Role
+
+# ROOT_BACKGROUND = '#191716'
+ROOT_BACKGROUND = '#101010'
+SCROLLABLE_FRAME_COLOR = '#222020'
+PLAYER_FRAME_COLOR = '#191716'
+BUTTON_COLOR = '#4e0f11'
 
 
 class UI(ctk.CTk):
     def __init__(self, controller):
-        super().__init__()
+        super().__init__(fg_color=ROOT_BACKGROUND)
         self.controller = controller
         self.player_frame_list = []
         self.pregame_widgets = []
@@ -28,9 +32,9 @@ class UI(ctk.CTk):
         self.draw_top()
 
         # Player list
-        self.player_list_frame = ctk.CTkScrollableFrame(self, corner_radius=0)
+        self.player_list_frame = ctk.CTkScrollableFrame(self, corner_radius=0, fg_color=SCROLLABLE_FRAME_COLOR)
         self.player_list_frame.grid(row=2, column=0, columnspan=3, padx=(25, 25), sticky="nsew")
-        self.player_list_frame.grid_rowconfigure(1, weight=1)
+        self.player_list_frame.columnconfigure(0, weight=1)
 
         # Player objects
         self.update_players_list()
@@ -105,7 +109,7 @@ class UI(ctk.CTk):
     def draw_bottom(self):
         if self.mute_button is None:
             # Mute button
-            self.mute_button = ctk.CTkButton(self, width=100, text="Mute", font=ctk.CTkFont(size=12, weight="bold"), command=self.toggle_mute)
+            self.mute_button = ctk.CTkButton(self, width=100, text="Mute", font=ctk.CTkFont(size=12, weight="bold"), command=self.toggle_mute, fg_color=BUTTON_COLOR)
             self.mute_button.grid(row=3, column=0, padx=(25, 25), pady=(10, 10), sticky="w")
 
         if self.deafened_label is None:
@@ -121,7 +125,7 @@ class UI(ctk.CTk):
         else:
             state = tkinter.NORMAL if self.controller.MIN_PLAYERS - len(self.controller.players) <= 0 else tkinter.DISABLED
             if self.start_game_button is None:
-                self.start_game_button = ctk.CTkButton(self, state=state, width=100, text="Start game", font=ctk.CTkFont(size=12, weight="bold"), command=self.start_game)
+                self.start_game_button = ctk.CTkButton(self, state=state, width=100, text="Start game", font=ctk.CTkFont(size=12, weight="bold"), command=self.start_game, fg_color=BUTTON_COLOR)
                 self.start_game_button.grid(row=4, column=1, padx=(10, 10), pady=10, sticky="w")
             self.start_game_button.configure(state=state)
 
@@ -132,27 +136,37 @@ class UI(ctk.CTk):
                 if current_players[i].id != player.id:
                     # other player
                     self.player_frame_list[i].after(200, self.player_frame_list[i].destroy)
-                    self.player_frame_list[i] = PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player)
-                    self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
+                    self.player_frame_list[i] = PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player, fg_color=PLAYER_FRAME_COLOR)
+                    self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="we")
+
                 else:
+                    # Update player
                     self.player_frame_list[i].player = player
+
                     if not self.is_pregame_lobby:
+                        # Add relevant role to name
+                        self.player_frame_list[i].add_player_role_to_name()
+                        # Mark player as dead
                         if not player.is_alive:
                             self.player_frame_list[i].mark_dead()
-                        can_vote = self.controller.can_vote_on(self.player_frame_list[i].player)
-                        if can_vote and self.player_frame_list[i].player.id != self.controller.player.id:
-                            self.player_frame_list[i].add_vote_button(self.vote_player)
-                        else:
-                            if self.player_frame_list[i].vote:
-                                self.player_frame_list[i].hide_vote_button()
+                        # Add vote button on players that are votable
+                        self.show_or_hide_vote_button(self.player_frame_list[i])
             else:
-                self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player))
-                self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="nsew")
+                self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player, fg_color=PLAYER_FRAME_COLOR))
+                self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="we")
 
         if len(current_players) > len(self.controller.players):
             for i in range(len(self.controller.players), len(current_players)):
                 self.player_frame_list[i].destroy()
                 del self.player_frame_list[i]
+
+    def show_or_hide_vote_button(self, player_frame):
+        can_vote = self.controller.can_vote_on(player_frame.player)
+        if can_vote and player_frame.player.id != self.controller.player.id:
+            player_frame.add_vote_button(self.vote_player)
+        else:
+            if player_frame.vote:
+                player_frame.hide_vote_button()
 
     def update_day_state(self, is_day):
         self.is_daytime = is_day
@@ -226,36 +240,39 @@ class UI(ctk.CTk):
 
 
 class PlayerName(ctk.CTkFrame):
-    def __init__(self, master, player, controller, is_pregame_lobby, vote_callback):
-        super().__init__(master)
+    def __init__(self, master, player, controller, is_pregame_lobby, vote_callback, **kwargs):
+        super().__init__(master, **kwargs)
         self.player = player
         self.controller = controller
         self.player_name = player.name
         self.vote = None
         self.height = 100
+        self.columnconfigure(0, weight=1)
 
         player_id = player.id
 
-        self.grid_columnconfigure(0, weight=1)
+        text_role_addition = ' (wolf)' if self.controller.player.role == 1 and self.player.role == 1 else ''
 
-        textcolor = 'red' if self.controller.player.role == 1 and player.role == 1 else None
-
-        text = self.player_name + ' - killed' if not self.player.is_alive else self.player_name
-
-        self.label = ctk.CTkLabel(self, text=text, text_color=textcolor, font=ctk.CTkFont(size=12, weight="bold"), anchor="w")
+        self.label = ctk.CTkLabel(self, text=self.player.name + text_role_addition, font=ctk.CTkFont(size=12, weight="bold"), anchor="w")
         self.label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
         if not is_pregame_lobby:
             if self.controller.can_vote_on(player):
-                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold", anchor="e"), command=lambda p=player_id: vote_callback(p))
+                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=player_id: vote_callback(p), fg_color=BUTTON_COLOR)
                 self.vote.grid(row=0, column=1, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 
     def add_vote_button(self, vote_callback):
-        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), anchor="e", command=lambda p=self.player.id: vote_callback(p))
+        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"), command=lambda p=self.player.id: vote_callback(p), fg_color=BUTTON_COLOR)
         self.vote.grid(row=0, column=1, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 
     def hide_vote_button(self):
         self.vote.grid_forget()
 
     def mark_dead(self):
-        self.label.configure(text_color='red')
+        self.label.configure(text_color='red', text=f'{self.player.name} ({Role.get_role_name_from_id(self.player.role)})')
+
+    def add_player_role_to_name(self):
+        additional_role_text = ''
+        if self.controller.player.role == 1 and self.player.role == 1:
+            additional_role_text += f' ({Role.get_role_name_from_id(self.player.role)})'
+        self.label.configure(text=f'{self.player.name + additional_role_text}')
