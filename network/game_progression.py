@@ -75,6 +75,12 @@ class GameProgression():
         self.werewolf_votes = [{}]
         self.round = 0
         self.round_timer = None
+
+        for player in self.players:
+            player.is_alive = True
+            self.is_muted = False
+            self.is_deafened = False
+
         self.start_round()
 
     def register_player(self, message, sender):
