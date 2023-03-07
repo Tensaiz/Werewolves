@@ -4,6 +4,8 @@ import pyaudio
 import keyboard as kb
 import json
 
+MAX_STREAM_POOL = 32
+
 
 class WerewolfNetworkClient:
     def __init__(self, host, port):
@@ -17,7 +19,7 @@ class WerewolfNetworkClient:
         self.audio = pyaudio.PyAudio()
         self.audio_settings = {
             'format': pyaudio.paInt16,
-            'chunks': 4096,
+            'chunks': 4096*2,
             'channels': 2,
             'rate': 48000
         }
@@ -31,7 +33,7 @@ class WerewolfNetworkClient:
         self.stream_pool = []
         self.stream_pool_availability = []
 
-        for _ in range(32):
+        for _ in range(MAX_STREAM_POOL):
             self.stream_pool.append(
                 self.audio.open(
                     format=self.audio_settings['format'],
@@ -84,7 +86,6 @@ class WerewolfNetworkClient:
         while True:
             for i, is_available in enumerate(self.stream_pool_availability):
                 if is_available:
-                    print(i)
                     return i
 
     def play_audio(self, message_bytes):

@@ -25,12 +25,15 @@ class WerewolfServer:
 
     def handle_udp(self):
         while True:
-            message, client_address = self.udp_socket.recvfrom(4096*2 * 4)
+            try:
+                message, client_address = self.udp_socket.recvfrom(4096*2 * 4)
 
-            if client_address not in self.udp_client_addresses:
-                self.udp_client_addresses.append(client_address)
+                if client_address not in self.udp_client_addresses:
+                    self.udp_client_addresses.append(client_address)
 
-            self.transmit_audio(message)
+                self.transmit_audio(message)
+            except Exception:
+                print("Client disconnected or something else went wrong with UDP")
 
     def transmit_audio(self, message):
         for udp_client in self.udp_client_addresses:
