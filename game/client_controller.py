@@ -221,13 +221,12 @@ class WerewolfClientController():
             role = Role.get_role_name_from_id(player.role).lower()
         else:
             role = 'unknown'
-
         return role
 
     def vote_player(self, player_id):
-        if self.phase == 0:
+        if self.phase <= 1:
             vote = 'BASE_VOTE'
-        elif self.phase == 2:
+        elif self.phase <= 3:
             vote = 'WEREWOLF_VOTE'
         message = {
             'action': vote,
@@ -235,3 +234,14 @@ class WerewolfClientController():
             'selected_player_id': player_id
         }
         self.send_message(message)
+
+    def restart_game(self):
+        self.send_message(
+            {'action': 'NEW_GAME'}
+        )
+        self.reset()
+
+    def reset(self):
+        self.game_is_finished = False
+        self.round = 0
+        self.phase = 0

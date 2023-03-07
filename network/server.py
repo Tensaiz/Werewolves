@@ -42,9 +42,6 @@ class WerewolfServer:
             print(f"New TCP client connected {tcp_address}")
             tcp_client = ServerClientThread(tcp_client_socket, tcp_address, self)
             tcp_client.start()
-            
-            
-            
             self.tcp_clients.append(tcp_client)
 
     def broadcast(self, message):

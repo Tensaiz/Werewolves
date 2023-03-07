@@ -37,7 +37,7 @@ class UI(ctk.CTk):
         self.draw_top()
 
         # Player list
-        self.player_list_frame = ctk.CTkScrollableFrame(self, corner_radius=0, fg_color=SCROLLABLE_FRAME_COLOR)
+        self.player_list_frame = ctk.CTkFrame(self, corner_radius=0, fg_color=SCROLLABLE_FRAME_COLOR)
         self.player_list_frame.grid(row=2, column=0, columnspan=3, padx=(25, 25), sticky="nsew")
         self.player_list_frame.columnconfigure(0, weight=1)
 
@@ -121,7 +121,7 @@ class UI(ctk.CTk):
         if self.deafened_label is None:
             # Deafened icon
             self.deafened_label = ctk.CTkLabel(self, text='Not deafened', font=ctk.CTkFont(size=12, weight="bold"))
-            self.deafened_label.grid(row=3, column=1, padx=(10, 50), pady=(10, 10), sticky="w")
+            self.deafened_label.grid(row=3, column=1, padx=(15, 50), pady=(10, 10), sticky="w")
 
         if not self.is_pregame_lobby:
             if self.state_label is None:
@@ -230,6 +230,12 @@ class UI(ctk.CTk):
                 player_frame.configure(fg_color=TEAM_LOST_COLOR)
             if player_frame.vote:
                 player_frame.hide_vote_button()
+        self.show_restart_button()
+
+    def show_restart_button(self):
+        self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
+                                            command=(), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
+        self.restart_button.grid(row=4, column=1, padx=(10, 50), pady=(10, 20), sticky="w")
 
     def toggle_mute(self):
         self.controller.network_client.toggle_mute()
