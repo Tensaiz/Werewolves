@@ -16,3 +16,12 @@ class Player():
         self.is_alive = True
         self.is_muted = False
         self.is_deafened = False
+
+    def __str__(self):
+        return f'''
+{self.name}
+{self.role}
+{self.is_alive}
+{self.is_muted}
+{self.is_deafened}
+        '''

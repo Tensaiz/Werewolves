@@ -1,11 +1,10 @@
 import json
-from typing import List
 from game.authentication_ui import AuthenticationUI
 from threading import Timer
+from game.role import Role
 from game.ui import UI
 from network.client import WerewolfNetworkClient
 from game.player import Player
-from game.utils import Utils
 from game.message import Message
 
 
@@ -97,9 +96,9 @@ class WerewolfClientController():
         elif message.action == "FINISH_GAME":
             # winner: 0 -> villager, 1 -> werewolf
             # Players list
-            self.finalize_game_ui(message)
             self.phase = 4
             self.game_is_finished = True
+            self.finalize_game_ui(message)
             return
         self.ui.update_window()
 
@@ -209,6 +208,20 @@ class WerewolfClientController():
         if self.phase == 2 and self.player.role == 1 and votee.is_alive:
             return True
         return False
+
+    def sees_role_of(self, player):
+        if self.game_is_finished:
+            role = Role.get_role_name_from_id(player.role).lower()
+        elif player.role == 1 and self.player.role == 1:
+            role = Role.get_role_name_from_id(player.role).lower()
+        elif not player.is_alive:
+            role = Role.get_role_name_from_id(player.role).lower()
+        elif player.id == self.player.id:
+            role = Role.get_role_name_from_id(player.role).lower()
+        else:
+            role = 'unknown'
+
+        return role
 
     def vote_player(self, player_id):
         if self.phase == 0:
