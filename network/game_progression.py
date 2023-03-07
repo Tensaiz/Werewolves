@@ -67,6 +67,15 @@ class GameProgression():
             self.vote("base", message)
         elif message["action"] == "WEREWOLF_VOTE":
             self.vote("werewolf", message)
+        elif message["action"] == "NEW_GAME":
+            self.restart()
+
+    def restart(self):
+        self.base_votes = [{}]
+        self.werewolf_votes = [{}]
+        self.round = 0
+        self.round_timer = None
+        self.start_round()
 
     def register_player(self, message, sender):
         player_name = message["name"]

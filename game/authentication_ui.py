@@ -70,7 +70,8 @@ class AuthenticationUI(ctk.CTkToplevel):
                 self.connect_button["state"] = tkinter.DISABLED
                 self.connecting = True
                 self.controller.connect(name, ip, port)
-            except Exception:
+            except Exception as e:
+                print(e)
                 msgb.askokcancel("Connection", f"Connection to {ip}:{port} failed!")
                 self.connect_button["state"] = tkinter.NORMAL
                 self.connecting = False
