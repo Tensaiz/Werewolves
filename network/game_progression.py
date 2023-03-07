@@ -49,9 +49,9 @@ class GameProgression():
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
         self.round = 0
-        self.base_round_time = 5
-        self.werewolf_round_time = 5
-        self.transition_time = 8
+        self.base_round_time = 6
+        self.werewolf_round_time = 6
+        self.transition_time = 2
         self.server = server
         self.round_timer = None
         self.players: List[Player] = []
