@@ -70,8 +70,12 @@ class WerewolfNetworkClient:
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.udp_socket.recv(32768)
-                self.output_stream.write(message_bytes)
+                message_bytes = self.udp_socket.recv(16384)
+                t = threading.Thread(target=lambda: self.play_audio(message_bytes))
+                t.start()
+
+    def play_audio(self, message_bytes):
+        self.output_stream.write(message_bytes)
 
     def handle_message(self):
         while True:
