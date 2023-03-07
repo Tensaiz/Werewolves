@@ -65,7 +65,7 @@ class UI(ctk.CTk):
     def update_timer(self, t):
         self.timer_label.configure(text=t)
 
-        if t > 0:
+        if t > 0 and not self.controller.game_is_finished:
             self.after(1000, lambda: self.update_timer(t - 1))
 
     def update_window(self):
@@ -234,7 +234,7 @@ class UI(ctk.CTk):
 
     def show_restart_button(self):
         self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
-                                            command=(), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
+                                            command=self.controller.restart_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
         self.restart_button.grid(row=4, column=1, padx=(10, 50), pady=(10, 20), sticky="w")
 
     def toggle_mute(self):
