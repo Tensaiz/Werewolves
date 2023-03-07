@@ -44,7 +44,6 @@ class WerewolfNetworkClient:
                 )
             )
             self.stream_pool_availability.append(True)
-
         self.controller = None
 
         # Game state
@@ -70,7 +69,7 @@ class WerewolfNetworkClient:
 
     def send_audio(self):
         while True:
-            if kb.read_key() == 'q' and not self.is_muted:
+            if kb.read_key() == 'v' and not self.is_muted:
                 data = self.input_stream.read(self.audio_settings['chunks'])
                 self.udp_socket.sendto(data, (self.host, self.port + 1))
 
