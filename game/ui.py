@@ -262,7 +262,7 @@ class PlayerName(ctk.CTkFrame):
         player_id = player.id
 
         self.label = ctk.CTkLabel(self, text=self.player.name, font=ctk.CTkFont(size=18, weight="bold"), anchor="w")
-        self.label.grid(row=0, column=1, padx=5, pady=10, sticky="w")
+        self.label.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 
         if not is_pregame_lobby:
             if self.controller.can_vote_on(player):
@@ -272,7 +272,6 @@ class PlayerName(ctk.CTkFrame):
 
     def add_role_image(self):
         role = self.controller.sees_role_of(self.player)
-        print(role)
         image = ctk.CTkImage(dark_image=Image.open(f"./resources/{role}.png"),
                              size=(30, 30))
         if self.role_image is None:

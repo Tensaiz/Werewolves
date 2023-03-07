@@ -2,10 +2,14 @@ import customtkinter as ctk
 from tkinter import messagebox as msgb
 import tkinter
 
+ROOT_BACKGROUND = '#101010'
+BUTTON_COLOR = '#4e0f11'
+BUTTON_HOVER_COLOR = '#3E090B'
+
 
 class AuthenticationUI(ctk.CTkToplevel):
     def __init__(self, controller):
-        super().__init__()
+        super().__init__(fg_color=ROOT_BACKGROUND)
         self.controller = controller
         self.connecting = False
         self.geometry("320x320")
@@ -49,7 +53,7 @@ class AuthenticationUI(ctk.CTkToplevel):
         self.port.insert(tkinter.END, "27015")
 
         # Connect button
-        self.connect_button = ctk.CTkButton(self, text="Connect", font=ctk.CTkFont(size=12, weight="bold"), command=self.connect)
+        self.connect_button = ctk.CTkButton(self, text="Connect", font=ctk.CTkFont(size=12, weight="bold"), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR, command=self.connect)
         self.connect_button.grid(row=2, column=1, padx=(25, 25), pady=(10, 50), sticky="s")
 
     def connect(self):
