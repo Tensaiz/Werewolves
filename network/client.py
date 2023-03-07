@@ -19,7 +19,7 @@ class WerewolfNetworkClient:
             'format': pyaudio.paInt16,
             'chunks': 4096,
             'channels': 2,
-            'rate': 44100
+            'rate': 48000
         }
         self.input_stream = self.audio.open(
             format=self.audio_settings['format'],
@@ -28,13 +28,20 @@ class WerewolfNetworkClient:
             input=True,
             frames_per_buffer=self.audio_settings['chunks']
         )
-        self.output_stream = self.audio.open(
-            format=self.audio_settings['format'],
-            channels=self.audio_settings['channels'],
-            rate=self.audio_settings['rate'],
-            output=True,
-            frames_per_buffer=self.audio_settings['chunks']
-        )
+        self.stream_pool = []
+        self.stream_pool_availability = []
+
+        for _ in range(32):
+            self.stream_pool.append(
+                self.audio.open(
+                    format=self.audio_settings['format'],
+                    channels=self.audio_settings['channels'],
+                    rate=self.audio_settings['rate'],
+                    output=True,
+                    frames_per_buffer=self.audio_settings['chunks']
+                )
+            )
+            self.stream_pool_availability.append(True)
 
         self.controller = None
 
@@ -64,18 +71,28 @@ class WerewolfNetworkClient:
             if kb.read_key() == 'q' and not self.is_muted:
                 data = self.input_stream.read(self.audio_settings['chunks'])
                 self.udp_socket.sendto(data, (self.host, self.port + 1))
-                print(len(data))
 
     # Receive audio
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.udp_socket.recv(16384)
+                message_bytes = self.udp_socket.recv(self.audio_settings['chunks'] * 4)
                 t = threading.Thread(target=lambda: self.play_audio(message_bytes))
                 t.start()
 
+    def select_output_stream(self):
+        while True:
+            for i, is_available in enumerate(self.stream_pool_availability):
+                if is_available:
+                    print(i)
+                    return i
+
     def play_audio(self, message_bytes):
-        self.output_stream.write(message_bytes)
+        output_stream_index = self.select_output_stream()
+
+        self.stream_pool_availability[output_stream_index] = False
+        self.stream_pool[output_stream_index].write(message_bytes)
+        self.stream_pool_availability[output_stream_index] = True
 
     def handle_message(self):
         while True:

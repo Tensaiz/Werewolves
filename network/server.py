@@ -25,7 +25,7 @@ class WerewolfServer:
 
     def handle_udp(self):
         while True:
-            message, client_address = self.udp_socket.recvfrom(16384)
+            message, client_address = self.udp_socket.recvfrom(4096*2 * 4)
 
             if client_address not in self.udp_client_addresses:
                 self.udp_client_addresses.append(client_address)
@@ -42,9 +42,6 @@ class WerewolfServer:
             print(f"New TCP client connected {tcp_address}")
             tcp_client = ServerClientThread(tcp_client_socket, tcp_address, self)
             tcp_client.start()
-            
-            
-            
             self.tcp_clients.append(tcp_client)
 
     def broadcast(self, message):
@@ -68,7 +65,7 @@ class ServerClientThread(threading.Thread):
     def run(self):
         try:
             while True:
-                data = self.socket.recv(4096)
+                data = self.socket.recv(4096*2)
                 if not data:
                     self.server.remove_client(self)
                     break
