@@ -78,8 +78,8 @@ class GameProgression():
 
         for player in self.players:
             player.is_alive = True
-            self.is_muted = False
-            self.is_deafened = False
+            player.is_muted = False
+            player.is_deafened = False
 
         self.start_round()
 
