@@ -105,6 +105,7 @@ class WerewolfClientController():
 
     def start_game_server(self, message):
         self.ui.is_pregame_lobby = False
+        self.reset()
         self.update_players(message)
 
         self.base_round_time = message.base_round_time
@@ -211,14 +212,17 @@ class WerewolfClientController():
         return False
 
     def sees_role_of(self, player):
-        if self.game_is_finished:
-            role = Role.get_role_name_from_id(player.role).lower()
-        elif player.role == 1 and self.player.role == 1:
-            role = Role.get_role_name_from_id(player.role).lower()
-        elif not player.is_alive:
-            role = Role.get_role_name_from_id(player.role).lower()
-        elif player.id == self.player.id:
-            role = Role.get_role_name_from_id(player.role).lower()
+        if hasattr(player, 'role') and player.role is not None:
+            if self.game_is_finished:
+                role = Role.get_role_name_from_id(player.role).lower()
+            elif player.role == 1 and self.player.role == 1:
+                role = Role.get_role_name_from_id(player.role).lower()
+            elif not player.is_alive:
+                role = Role.get_role_name_from_id(player.role).lower()
+            elif player.id == self.player.id:
+                role = Role.get_role_name_from_id(player.role).lower()
+            else:
+                role = 'unknown'
         else:
             role = 'unknown'
         return role
@@ -239,9 +243,9 @@ class WerewolfClientController():
         self.send_message(
             {'action': 'NEW_GAME'}
         )
-        self.reset()
 
     def reset(self):
         self.game_is_finished = False
         self.round = 0
         self.phase = 0
+        self.ui.reset_for_next_game()

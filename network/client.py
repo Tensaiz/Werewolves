@@ -101,7 +101,7 @@ class WerewolfNetworkClient:
             try:
                 message_bytes = self.base_socket.recv(self.audio_settings['chunks'])
                 message = json.loads(message_bytes.decode('utf-8'))
-                print(message)
+                # print(message)
                 self.controller.handle_message(message)
             except ConnectionError:
                 break

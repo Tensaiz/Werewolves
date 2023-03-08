@@ -29,7 +29,25 @@ class UI(ctk.CTk):
         self.is_daytime = True
 
         self.init_pregame_vars()
+        self.write_init_UI()
 
+    def init_pregame_vars(self):
+        self.restart_button = None
+        self.player_list_frame = None
+        self.current_vote_id = None
+        self.pregame_label = None
+        self.player_count = None
+        self.player_required_count = None
+        self.start_game_button = None
+        self.mute_button = None
+        self.role_label = None
+        self.daytime_label = None
+        self.timer_label = None
+        self.deafened_label = None
+        self.state_label = None
+        self.role_image = None
+
+    def write_init_UI(self):
         # configure grid layout (3x3)
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -44,23 +62,7 @@ class UI(ctk.CTk):
         # Player objects
         self.update_players_list()
 
-        self.voted_id = -1
-
         self.draw_bottom()
-
-    def init_pregame_vars(self):
-        self.current_vote_id = None
-        self.pregame_label = None
-        self.player_count = None
-        self.player_required_count = None
-        self.start_game_button = None
-        self.mute_button = None
-        self.role_label = None
-        self.daytime_label = None
-        self.timer_label = None
-        self.deafened_label = None
-        self.state_label = None
-        self.role_image = None
 
     def update_timer(self, t):
         self.timer_label.configure(text=t)
@@ -232,6 +234,15 @@ class UI(ctk.CTk):
                 player_frame.hide_vote_button()
         self.show_restart_button()
 
+    def reset_for_next_game(self):
+        for player_frame in self.player_frame_list:
+            player_frame.configure(fg_color='#191716')
+            if player_frame.dead_image:
+                player_frame.dead_image.grid_forget()
+        if self.restart_button:
+            self.restart_button.destroy()
+        self.current_vote_id = None
+
     def show_restart_button(self):
         self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
                                             command=self.controller.restart_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
@@ -276,6 +287,12 @@ class PlayerName(ctk.CTkFrame):
                                           command=lambda p=player_id: vote_callback(p), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
                 self.vote.grid(row=0, column=2, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 
+        image = ctk.CTkImage(dark_image=Image.open('./resources/dead.png'),
+                             size=(30, 30))
+        self.dead_image = ctk.CTkButton(self, image=image, text='', state='disabled', width=30, fg_color='transparent')
+        self.dead_image.grid(row=0, column=2, sticky="e")
+        self.dead_image.grid_forget()
+
     def add_role_image(self):
         role = self.controller.sees_role_of(self.player)
         image = ctk.CTkImage(dark_image=Image.open(f"./resources/{role}.png"),
@@ -295,8 +312,4 @@ class PlayerName(ctk.CTkFrame):
         self.vote.grid_forget()
 
     def mark_dead(self):
-        image = ctk.CTkImage(dark_image=Image.open('./resources/dead.png'),
-                             size=(30, 30))
-        if self.dead_image is None:
-            self.dead_image = ctk.CTkButton(self, image=image, text='', state='disabled', width=30, fg_color='transparent')
-            self.dead_image.grid(row=0, column=2, sticky="e")
+        self.dead_image.grid(row=0, column=2, sticky="e")
