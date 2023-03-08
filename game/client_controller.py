@@ -13,7 +13,7 @@ class WerewolfClientController():
         self.MIN_PLAYERS = 5
         self.game_is_finished = False
 
-        self.player = Player('')
+        self.player = Player()
         self.players = []
 
         self.round = 0

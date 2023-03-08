@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 import pyaudio
 import keyboard as kb
 import json
@@ -12,8 +13,8 @@ class WerewolfNetworkClient:
         # Network
         self.host = host
         self.port = port
-        self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.base_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Audio
         self.audio = pyaudio.PyAudio()
@@ -51,8 +52,8 @@ class WerewolfNetworkClient:
         self.is_deafened = False
 
     def connect(self):
-        self.tcp_socket.connect((self.host, self.port))
-        self.udp_socket.connect((self.host, self.port + 1))
+        self.base_socket.connect((self.host, self.port))
+        self.audio_socket.connect((self.host, self.port + 1))
         print('Connected to server')
 
     def send_message(self, message):
@@ -65,19 +66,20 @@ class WerewolfNetworkClient:
         # Votes:
         # sender_id
         # selected_player_id
-        self.tcp_socket.send(message.encode("utf-8"))
+        self.base_socket.send(message.encode("utf-8"))
 
     def send_audio(self):
         while True:
             if kb.read_key() == 'v' and not self.is_muted:
                 data = self.input_stream.read(self.audio_settings['chunks'])
-                self.udp_socket.sendto(data, (self.host, self.port + 1))
+                self.audio_socket.send(data)
+                time.sleep(0.001)
 
     # Receive audio
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.udp_socket.recv(self.audio_settings['chunks'] * 4)
+                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4)
                 t = threading.Thread(target=lambda: self.play_audio(message_bytes))
                 t.start()
 
@@ -97,7 +99,7 @@ class WerewolfNetworkClient:
     def handle_message(self):
         while True:
             try:
-                message_bytes = self.tcp_socket.recv(self.audio_settings['chunks'])
+                message_bytes = self.base_socket.recv(self.audio_settings['chunks'])
                 message = json.loads(message_bytes.decode('utf-8'))
                 print(message)
                 self.controller.handle_message(message)

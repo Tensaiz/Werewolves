@@ -9,55 +9,77 @@ class WerewolfServer:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.tcp_clients: List[ServerClientThread] = []
-        self.udp_client_addresses = []
+        self.basic_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.audio_clients = []
+        self.basic_clients: List[BaseClientThread] = []
         self.game_progression: GameProgression = GameProgression(self)
 
     def start(self):
-        self.tcp_socket.bind((self.host, self.port))
-        self.udp_socket.bind((self.host, self.port + 1))
-        self.tcp_socket.listen()
+        self.basic_socket.bind((self.host, self.port))
+        self.audio_socket.bind((self.host, self.port + 1))
+
+        self.basic_socket.listen()
+        self.audio_socket.listen()
+
         print(f'Server is running on port {self.port}!')
-        threading.Thread(target=self.handle_udp, daemon=True).start()
-        self.handle_tcp()
 
-    def handle_udp(self):
+        threading.Thread(target=self.handle_audio, daemon=True).start()
+        self.handle_base()
+
+    def handle_audio(self):
         while True:
-            try:
-                message, client_address = self.udp_socket.recvfrom(4096*2 * 4)
+            audio_client_socket, client_address = self.audio_socket.accept()
+            audio_client = AudioClientThread(audio_client_socket, client_address, self)
+            audio_client.start()
+            self.audio_clients.append(audio_client)
 
-                if client_address not in self.udp_client_addresses:
-                    self.udp_client_addresses.append(client_address)
-
-                self.transmit_audio(message)
-            except Exception:
-                print("Client disconnected or something else went wrong with UDP")
-
-    def transmit_audio(self, message):
-        for udp_client in self.udp_client_addresses:
-            self.udp_socket.sendto(message, udp_client)
-
-    def handle_tcp(self):
+    def handle_base(self):
         while True:
-            tcp_client_socket, tcp_address = self.tcp_socket.accept()
-            print(f"New TCP client connected {tcp_address}")
-            tcp_client = ServerClientThread(tcp_client_socket, tcp_address, self)
-            tcp_client.start()
-            self.tcp_clients.append(tcp_client)
+            base_client_socket, client_address = self.basic_socket.accept()
+            print(f"New TCP client connected {client_address}")
+            base_client = BaseClientThread(base_client_socket, client_address, self)
+            base_client.start()
+            self.basic_clients.append(base_client)
 
-    def broadcast(self, message):
-        for client in self.tcp_clients:
+    def broadcast(self, message, receivers=None):
+        if receivers is None:
+            receivers = self.basic_clients
+        for client in receivers:
             client.send(message)
 
-    def remove_client(self, client):
-        self.tcp_clients.remove(client)
+    def remove_audio_client(self, client):
+        self.audio_clients.remove(client)
+
+    def remove_base_client(self, client):
+        self.basic_clients.remove(client)
         self.game_progression.remove_player(client)
-        # TODO: Remove UDP client with same IP
 
 
-class ServerClientThread(threading.Thread):
+class AudioClientThread(threading.Thread):
+    def __init__(self, socket, address, server: WerewolfServer):
+        super().__init__()
+        self.socket = socket
+        self.address = address
+        self.server = server
+
+    def run(self):
+        try:
+            while True:
+                data = self.socket.recv(4096*2*4)
+                if not data:
+                    self.server.remove_audio_client(self)
+                    break
+                self.server.broadcast(data, self.server.audio_clients)
+        except (ConnectionResetError):
+            print(f"Client {self.address} disconnected from audio.")
+            self.server.remove_audio_client(self)
+
+    def send(self, message):
+        self.socket.send(message)
+
+
+class BaseClientThread(threading.Thread):
     def __init__(self, socket, address, server: WerewolfServer):
         super().__init__()
         self.socket = socket
@@ -70,13 +92,13 @@ class ServerClientThread(threading.Thread):
             while True:
                 data = self.socket.recv(4096*2)
                 if not data:
-                    self.server.remove_client(self)
+                    self.server.remove_base_client(self)
                     break
                 self.server.game_progression.process(data, self)
                 # self.server.broadcast(data)
         except (ConnectionResetError):
-            print(f"Client {self.address} disconnected.")
-            self.server.remove_client(self)
+            print(f"Client {self.address} disconnected from messaging.")
+            self.server.remove_base_client(self)
 
     def send(self, message):
         message = json.dumps(message).encode("utf-8")
