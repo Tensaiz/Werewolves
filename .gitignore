@@ -4,3 +4,4 @@ __pycache__/
 resources/Weerwolven van Wakkerdam - handleiding incl Volle Maan en Karakters.pdf
 dist/
 build/
+*.spec
