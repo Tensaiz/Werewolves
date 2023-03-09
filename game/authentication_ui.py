@@ -26,26 +26,14 @@ class AuthenticationUI(ctk.CTkToplevel):
         self.title_label = ctk.CTkLabel(self, text="Log in", font=ctk.CTkFont(size=21, weight="bold"))
         self.title_label.grid(row=0, column=1, pady=(25, 25), padx=(25, 25), sticky="s")
 
-        # # Name input
-        # self.name = ctk.CTkEntry(self, placeholder_text="Name")
-        # self.name.grid(row=1, column=1, pady=(0, 0), padx=(25, 25), sticky="n")
-
-        # # Server ip input
-        # self.ip = ctk.CTkEntry(self, placeholder_text="IP Address")
-        # self.ip.grid(row=1, column=1, pady=(25, 25), padx=(25, 25))
-
-        # # Server port input
-        # self.port = ctk.CTkEntry(self, placeholder_text="Port")
-        # self.port.grid(row=1, column=1, pady=(0, 0), padx=(25, 25), sticky="s")
         # Name input
-        self.name = ctk.CTkEntry(self, placeholder_text="Name")
+        self.name = ctk.CTkEntry(self, placeholder_text="Enter your name here")
         self.name.grid(row=1, column=1, pady=(0, 0), padx=(25, 25), sticky="n")
-        self.name.insert(tkinter.END, "a")
 
         # Server ip input
         self.ip = ctk.CTkEntry(self, placeholder_text="IP Address")
         self.ip.grid(row=1, column=1, pady=(25, 25), padx=(25, 25))
-        self.ip.insert(tkinter.END, "localhost")
+        self.ip.insert(tkinter.END, "77.249.47.149")
 
         # Server port input
         self.port = ctk.CTkEntry(self, placeholder_text="Port")

@@ -1,3 +1,4 @@
 pyaudio
 keyboard
 tkinter
+pyinstaller
