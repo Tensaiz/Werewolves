@@ -8,7 +8,6 @@ class Role:
 
     @staticmethod
     def get_role_name_from_id(id):
-        print(id)
         role_name_dict = {
             0: 'Villager',
             1: 'Werewolf'

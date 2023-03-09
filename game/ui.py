@@ -263,6 +263,19 @@ class UI(ctk.CTk):
         self.start_game_button.grid_remove()
 
 
+    def mark_player_speaking(self, playerid):
+        player_frame = self.get_player_frame_by_id(playerid)
+        player_frame.configure(border_width=2, border_color='green')
+
+    def mark_player_done_speaking(self, playerid):
+        player_frame = self.get_player_frame_by_id(playerid)
+        player_frame.configure(border_width=0, border_color=PLAYER_FRAME_COLOR)
+
+    def get_player_frame_by_id(self, playerid):
+        for player_frame in self.player_frame_list:
+            if player_frame.player.id == playerid:
+                return player_frame
+
 class PlayerName(ctk.CTkFrame):
     def __init__(self, master, player, controller, is_pregame_lobby, vote_callback, **kwargs):
         super().__init__(master, **kwargs)

@@ -1,4 +1,5 @@
 pyaudio
-keyboard
 tkinter
 pyinstaller
+pynput
+json

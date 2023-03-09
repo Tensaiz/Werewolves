@@ -2,8 +2,9 @@ import socket
 import threading
 import time
 import pyaudio
-import keyboard as kb
 import json
+import base64
+from pynput import keyboard
 
 MAX_STREAM_POOL = 32
 
@@ -66,22 +67,37 @@ class WerewolfNetworkClient:
         # Votes:
         # sender_id
         # selected_player_id
-        self.base_socket.send(message.encode("utf-8"))
+        self.base_socket.send(message.encode("utf-8"))            
 
-    def send_audio(self):
-        while True:
-            if kb.read_key() == 'v' and not self.is_muted:
-                data = self.input_stream.read(self.audio_settings['chunks'])
-                self.audio_socket.send(data)
-                time.sleep(0.001)
+    def on_key_press(self, key):
+        if hasattr(key, 'char') and key.char == 'v' and not self.is_muted:
+            self.controller.ui.mark_player_speaking(self.controller.player.id)
+            speech_bytes = self.input_stream.read(self.audio_settings['chunks'])
+            speech_str = base64.b64encode(speech_bytes).decode("utf-8")
+            speech_message = {
+                'sender_id': self.controller.player.id,
+                'data':  speech_str
+            }
+            message = json.dumps(speech_message).encode("utf-8")
+            self.audio_socket.send(message)
+            time.sleep(0.001)
+
+    def on_key_release(self, key):
+        if hasattr(key, 'char') and key.char == 'v':
+            self.controller.ui.mark_player_done_speaking(self.controller.player.id)
 
     # Receive audio
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4)
-                t = threading.Thread(target=lambda: self.play_audio(message_bytes))
-                t.start()
+                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 6)
+                message = json.loads(message_bytes.decode('utf-8'))
+                sender_id = message['sender_id']
+                if sender_id != self.controller.player.id:
+                    self.controller.ui.mark_player_speaking(sender_id)
+                    audio_bytes = base64.b64decode(message['data'])
+                    t = threading.Thread(target=lambda: self.play_audio(audio_bytes, sender_id))
+                    t.start()
 
     def select_output_stream(self):
         while True:
@@ -89,12 +105,14 @@ class WerewolfNetworkClient:
                 if is_available:
                     return i
 
-    def play_audio(self, message_bytes):
+    def play_audio(self, message_bytes, sender_id):
         output_stream_index = self.select_output_stream()
 
         self.stream_pool_availability[output_stream_index] = False
         self.stream_pool[output_stream_index].write(message_bytes)
         self.stream_pool_availability[output_stream_index] = True
+        self.controller.ui.mark_player_done_speaking(sender_id)
+
 
     def handle_message(self):
         while True:
@@ -121,4 +139,5 @@ class WerewolfNetworkClient:
     def run(self):
         threading.Thread(target=self.handle_message, daemon=True).start()
         threading.Thread(target=self.handle_audio, daemon=True).start()
-        threading.Thread(target=self.send_audio, daemon=True).start()
+        listener_up = keyboard.Listener(on_press=self.on_key_press).start()
+        listener_down = keyboard.Listener(on_release=self.on_key_release).start()
