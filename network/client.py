@@ -57,7 +57,7 @@ class WerewolfNetworkClient:
         print('Connected to server')
 
     def send_message(self, message):
-        self.base_socket.send(message.encode("utf-8"))            
+        self.base_socket.send(message.encode("utf-8"))
 
     def on_key_press(self, key):
         print("YO")
