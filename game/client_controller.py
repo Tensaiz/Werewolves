@@ -7,10 +7,11 @@ from network.client import WerewolfNetworkClient
 from game.player import Player
 from game.message import Message
 
+MIN_PLAYERS = 5
+
 
 class WerewolfClientController():
     def __init__(self, network_client: WerewolfNetworkClient = None):
-        self.MIN_PLAYERS = 5
         self.game_is_finished = False
 
         self.player = Player()

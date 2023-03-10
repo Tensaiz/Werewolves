@@ -33,7 +33,7 @@ class AuthenticationUI(ctk.CTkToplevel):
         # Server ip input
         self.ip = ctk.CTkEntry(self, placeholder_text="IP Address")
         self.ip.grid(row=1, column=1, pady=(25, 25), padx=(25, 25))
-        self.ip.insert(tkinter.END, "77.249.47.149")
+        self.ip.insert(tkinter.END, "localhost")  # 77.249.47.149
 
         # Server port input
         self.port = ctk.CTkEntry(self, placeholder_text="Port")
