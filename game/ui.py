@@ -2,7 +2,7 @@ import tkinter
 from PIL import Image
 import customtkinter as ctk
 from game.role import Role
-from client_controller import MIN_PLAYERS
+import game.client_controller as cc
 
 ROOT_BACKGROUND = '#101010'
 SCROLLABLE_FRAME_COLOR = '#222020'
@@ -108,7 +108,7 @@ class UI(ctk.CTk):
             self.player_count.configure(text=f"Players: {len(self.controller.players)}")
 
             # Player required count
-            players_required = MIN_PLAYERS - len(self.controller.players)
+            players_required = cc.MIN_PLAYERS - len(self.controller.players)
             players_required_text = players_required if players_required >= 0 else 0
             if self.player_required_count is None:
                 self.player_required_count = ctk.CTkLabel(self, text=f"{players_required_text} more players required", font=ctk.CTkFont(size=12, weight="bold"))
@@ -132,7 +132,7 @@ class UI(ctk.CTk):
                 self.state_label = ctk.CTkLabel(self, text="Alive", font=ctk.CTkFont(size=12, weight="bold"))
                 self.state_label.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="nsew")
         else:
-            state = tkinter.NORMAL if MIN_PLAYERS - len(self.controller.players) <= 0 else tkinter.DISABLED
+            state = tkinter.NORMAL if cc.MIN_PLAYERS - len(self.controller.players) <= 0 else tkinter.DISABLED
             if self.start_game_button is None:
                 self.start_game_button = ctk.CTkButton(self, state=state, width=100, text="Start game",
                                                        font=ctk.CTkFont(size=12, weight="bold"), command=self.start_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
