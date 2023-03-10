@@ -87,9 +87,9 @@ class WerewolfNetworkClient:
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4 * 16*4)
+                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4 * 16 * 4)
                 try:
-                    message = message_bytes.decode('utf-8')        
+                    message = message_bytes.decode('utf-8')
                     object_indices = [m.start() for m in re.finditer("sender_id", message)]
 
                     for i, obj_idx in enumerate(object_indices):
