@@ -27,3 +27,6 @@ class Message():
         self.transition_time = transition_time
         self.role_decide_time = role_decide_time
         self.winner = winner
+
+    def __str__(self):
+        return vars(self)

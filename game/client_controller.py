@@ -203,8 +203,14 @@ class WerewolfClientController():
         self.ui.update_timer(self.role_decide_time)
         self.ui.update_window()
 
-        transition_timer = Timer(self.role_decide_time, self.transition_to_next_night_round)
+        transition_timer = Timer(self.role_decide_time, self.update_and_next_night_round)
         transition_timer.start()
+
+
+    def update_and_next_night_round(self):
+        self.ui.update_window()
+        self.transition_to_next_night_round()
+
 
     def witch_round(self):
         self.phase = 'Witch healing or poisoning'
