@@ -138,18 +138,23 @@ class GameProgression():
         self.round_timer.start()
 
     '''
-    Return role ids of the roles that have a turn during the night based on the player list argument
+    Return phase ids of the roles that have a turn during the night based on the player list argument
+    0 = seer
+    1  = werewolves
+    2 = witch
     '''
     @staticmethod
     def get_phases(players):
-        # Seer -> werewolves -> witch
+        # 0 - Seer -> 1 - werewolves -> 2 - witch
         phases = []
         for player in players:
             if not player.is_alive:
                 continue
             elif player.role.id == 4:
                 # Seer turn this round
-                phases.append(4)
+                phases.append(0)
+            elif player.role.id == 1 and 1 not in phases:
+                phases.append(1)
             elif player.role.id == 2 and (player.role.has_healing_potion or player.role.has_killing_potion):
                 # Witch turn
                 phases.append(2)

@@ -84,10 +84,10 @@ class UI(ctk.CTk):
                 self.role_label.grid(row=0, column=0, pady=(10, 10), padx=(25, 25), sticky="w")
             self.role_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}")
 
-            day_state = 'Day' if self.controller.phase == 0 or self.controller.phase == 1 else 'Night'
+            day_state = self.controller.phase
 
             if self.daytime_label is None:
-                self.daytime_label = ctk.CTkLabel(self, text=day_state, font=ctk.CTkFont(size=21, weight="bold"))
+                self.daytime_label = ctk.CTkLabel(self, text=day_state, font=ctk.CTkFont(size=16, weight="bold"))
                 self.daytime_label.grid(row=0, column=1, pady=(10, 10), padx=(25, 25), sticky="w")
             self.daytime_label.configure(text=day_state)
 
