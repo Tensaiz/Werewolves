@@ -15,7 +15,8 @@ class Message():
             werewolf_round_time = -1,
             transition_time = -1,
             role_decide_time = -1,
-            winner = -1
+            winner = -1,
+            is_host = False,
         ):
         self.action = action
         self.players = players
@@ -27,6 +28,7 @@ class Message():
         self.transition_time = transition_time
         self.role_decide_time = role_decide_time
         self.winner = winner
+        self.is_host = is_host
 
     def __str__(self):
         return vars(self)
