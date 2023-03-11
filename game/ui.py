@@ -132,11 +132,15 @@ class UI(ctk.CTk):
                 self.state_label = ctk.CTkLabel(self, text="Alive", font=ctk.CTkFont(size=12, weight="bold"))
                 self.state_label.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="nsew")
         else:
+            if not self.controller.is_player_host:
+                return
+
             state = tkinter.NORMAL if cc.MIN_PLAYERS - len(self.controller.players) <= 0 else tkinter.DISABLED
             if self.start_game_button is None:
                 self.start_game_button = ctk.CTkButton(self, state=state, width=100, text="Start game",
                                                        font=ctk.CTkFont(size=12, weight="bold"), command=self.start_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
                 self.start_game_button.grid(row=4, column=1, padx=(10, 10), pady=10, sticky="w")
+
             self.start_game_button.configure(state=state)
 
     def update_players_list(self):
@@ -245,6 +249,9 @@ class UI(ctk.CTk):
         self.current_vote_id = None
 
     def show_restart_button(self):
+        if not self.controller.is_player_host:
+            return
+
         self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
                                             command=self.controller.restart_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
         self.restart_button.grid(row=4, column=1, padx=(10, 50), pady=(10, 20), sticky="w")
@@ -261,7 +268,8 @@ class UI(ctk.CTk):
         self.pregame_label.grid_remove()
         self.player_count.grid_remove()
         self.player_required_count.grid_remove()
-        self.start_game_button.grid_remove()
+        if self.start_game_button:
+            self.start_game_button.grid_remove()
 
     def mark_player_speaking(self, playerid):
         player_frame = self.get_player_frame_by_id(playerid)
