@@ -50,6 +50,7 @@ class GameProgression():
     def __init__(self, server) -> None:
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
+        self.witch_votes = {}
         self.round = 0
         self.base_round_time = 6
         self.werewolf_round_time = 6
@@ -70,6 +71,8 @@ class GameProgression():
             self.vote("base", message)
         elif message["action"] == "WEREWOLF_VOTE":
             self.vote("werewolf", message)
+        elif message["action"] == "WITCH_VOTE":
+            self.witch_vote(message)
         elif message["action"] == "NEW_GAME":
             self.restart()
 
@@ -154,6 +157,7 @@ class GameProgression():
                 # Seer turn this round
                 phases.append(0)
             elif player.role.id == 1 and 1 not in phases:
+                # Werewolves turn
                 phases.append(1)
             elif player.role.id == 2 and (player.role.has_healing_potion or player.role.has_killing_potion):
                 # Witch turn
@@ -193,14 +197,25 @@ class GameProgression():
         elif type == "werewolf":
             self.werewolf_votes[self.round][sender] = voted_on
 
+    def witch_vote(self, message):
+        if "save" in message.keys():
+            self.witch_votes["save"] = message["save"]
+        elif "kill" in message.keys():
+            self.witch_votes["kill"] = message["kill"]
+
     def finish_voting(self, type: str):
         self.round_timer = None
         votee = self.calculate_votee(type)
 
+        night_rounds = self.get_phases(self.players)
+
         # Process dead player
         if votee and type in ["base", "werewolf"]:
             self.kill_player(votee)
-        self.change_player_audio("base" == type)
+
+        # Don't change player audio if the witch still has its turn
+        if not (type == "werewolf" and 2 in night_rounds):
+            self.change_player_audio("base" == type)
 
         # SEND VOTEE TO CLIENTS
         type_upper = type.upper()
@@ -212,15 +227,20 @@ class GameProgression():
             "players": self.map_players()
         })
 
-        if self.game_finished():
-            return
+        # Don't change player audio if the witch still has its turn
+        if not (type == "werewolf" and 2 in night_rounds):
+            if self.game_finished():
+                return
 
         # Transition to next phase
         if type == "base":
-            # Transition to werewolf voting phase
+            # Transition to next night voting phase
             time.sleep(self.transition_time)
-            # Update player muted status and broadcast
+            # Wait for Seer to view a role on client side
+            if 0 in night_rounds:
+                time.sleep(self.role_decide_time)
 
+            # Start calculating werewolf votes after werewolf round time
             werewolf_timer = Timer(self.werewolf_round_time, lambda: self.finish_voting("werewolf"))
             werewolf_timer.start()
         elif type == "werewolf":
@@ -229,8 +249,41 @@ class GameProgression():
             self.base_votes.append({})
             self.werewolf_votes.append({})
 
-            # Update player muted status and broadcast
-            self.start_round()
+            if 2 in night_rounds:
+                # Witch turn
+                witch_timer = Timer(self.role_decide_time, lambda: self.finish_witch_voting())
+                witch_timer.start()
+            else:
+                # Update player muted status and broadcast
+                self.start_round()
+
+    def finish_witch_voting(self):
+        time.sleep(self.transition_time)
+
+        witch_player = Role.get_players_by_role(self.players, 2)[0]
+
+        for key in list(self.witch_votes.keys()):
+            if key == "save":
+                # Save player and remove life potion
+                self.revive_player(self.witch_votes["save"])
+                witch_player.role.has_healing_potion = 0
+            elif key == "kill":
+                # Kill another player and remove poison
+                self.kill_player(self.witch_votes["kill"])
+                witch_player.role.has_killing_potion = 0
+
+        if self.game_finished():
+            return
+        
+        self.change_player_audio(False)
+
+        # Send latest player update
+        action_name = "FINISH_WITCH_VOTE"
+        self.server.broadcast({
+            "action": action_name,
+            "players": self.map_players()
+        })
+        self.start_round()
 
     def change_player_audio(self, mute):
         for player in self.players:
@@ -239,6 +292,12 @@ class GameProgression():
                 player.is_muted = mute
             if not player.is_alive:
                 player.is_muted = True
+
+    def revive_player(self, player_id):
+        for player in self.players:
+            if player.id == player_id:
+                player.is_alive = True
+                break
 
     def kill_player(self, player_id):
         for player in self.players:

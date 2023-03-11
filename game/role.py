@@ -44,6 +44,14 @@ class Role:
         }
         return role_class_dict[role_id]
 
+    @staticmethod
+    def get_players_by_role(players, role_id):
+        players_with_role = []
+        for player in players:
+            if player.role.id == role_id:
+                players_with_role.append(player)
+        return players_with_role
+
 class Villager(Role):
     def __init__(self, **kwargs):
         self.id = 0

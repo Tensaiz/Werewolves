@@ -99,6 +99,8 @@ class WerewolfClientController():
             # action, result (1 decisive, else 0), votee (votee name)
             # players
             self.handle_werewolf_vote(message)
+        elif message.action == "FINISH_WITCH_VOTE":
+            self.handle_witch_vote(message)
         elif message.action == "FINISH_GAME":
             # winner: 0 -> villager, 1 -> werewolf
             # Players list
@@ -166,7 +168,6 @@ class WerewolfClientController():
         self.transition_to_next_night_round()
 
     def transition_to_next_night_round(self):
-        self.ui.update_window()
         # Seer round
         if 0 in self.next_rounds:
             self.next_rounds.remove(0)
@@ -180,7 +181,8 @@ class WerewolfClientController():
             self.next_rounds.remove(2)
             role_round = self.witch_round
         else:
-            return
+            self.ui.update_window()
+            role_round = self.reset_round
 
         self.ui.update_timer(self.transition_time)
         transition_timer = Timer(self.transition_time, role_round)
@@ -192,16 +194,13 @@ class WerewolfClientController():
 
         self.phase = 'Werewolves eating'
 
-        self.ui.update_timer(self.werewolf_round_time) # add correct round time
+        self.ui.update_timer(self.werewolf_round_time)
         self.ui.update_window()
-        
-        transition_timer = Timer(self.werewolf_round_time, self.transition_to_next_night_round)
-        transition_timer.start()
 
     def seer_round(self):
         self.phase = 'Seer peeking'
 
-        self.ui.update_timer(self.role_decide_time) # add correct round time
+        self.ui.update_timer(self.role_decide_time)
         self.ui.update_window()
 
         transition_timer = Timer(self.role_decide_time, self.transition_to_next_night_round)
@@ -223,12 +222,17 @@ class WerewolfClientController():
         self.ui.update_timer(self.base_round_time)
 
     def handle_werewolf_vote(self, message):
+        self.werewolf_votee = message.votee
+        self.handle_night_vote(message)
+
+    def handle_witch_vote(self, message):
+        self.handle_night_vote(message)
+
+    def handle_night_vote(self, message):
         self.update_players(message)
         self.phase = 'Transitioning'
         self.remove_voting_ui()
-        self.ui.update_timer(self.transition_time)
-        transition_timer = Timer(self.transition_time, self.reset_round)
-        transition_timer.start()
+        self.transition_to_next_night_round()
 
     def remove_voting_ui(self):
         self.ui.remove_voting_marks()
