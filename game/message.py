@@ -29,3 +29,6 @@ class Message():
         self.role_decide_time = role_decide_time
         self.winner = winner
         self.is_host = is_host
+
+    def __str__(self):
+        return vars(self)
