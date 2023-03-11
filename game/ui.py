@@ -80,9 +80,9 @@ class UI(ctk.CTk):
     def draw_top(self):
         if not self.is_pregame_lobby and self.controller.player.role is not None:
             if self.role_label is None:
-                self.role_label = ctk.CTkLabel(self, text=f"{Role.get_role_name_from_id(self.controller.player.role)}", font=ctk.CTkFont(size=21, weight="bold"))
+                self.role_label = ctk.CTkLabel(self, text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}", font=ctk.CTkFont(size=21, weight="bold"))
                 self.role_label.grid(row=0, column=0, pady=(10, 10), padx=(25, 25), sticky="w")
-            self.role_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role)}")
+            self.role_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}")
 
             day_state = 'Day' if self.controller.phase == 0 or self.controller.phase == 1 else 'Night'
 
@@ -227,7 +227,7 @@ class UI(ctk.CTk):
 
     def show_final_game_ui(self, winning_team):
         for player_frame in self.player_frame_list:
-            if player_frame.player.role == winning_team:
+            if player_frame.player.role.id == winning_team:
                 player_frame.configure(fg_color=TEAM_WON_COLOR)
             else:
                 player_frame.configure(fg_color=TEAM_LOST_COLOR)

@@ -7,11 +7,11 @@ from network.client import WerewolfNetworkClient
 from game.player import Player
 from game.message import Message
 
-MIN_PLAYERS = 5
+MIN_PLAYERS = 1
 
 
 class WerewolfClientController():
-    def __init__(self, network_client: WerewolfNetworkClient = None):
+    def __init__(self):
         self.game_is_finished = False
 
         self.player = Player()
@@ -78,7 +78,7 @@ class WerewolfClientController():
         self.send_message(start_game_json)
 
     def handle_message(self, message):
-        message = Message(message)
+        message = Message(**message)
         if message.action == "START_GAME":
             self.start_game_server(message)
         elif message.action == "REGISTER_PLAYER":
@@ -107,6 +107,7 @@ class WerewolfClientController():
     def start_game_server(self, message):
         self.ui.is_pregame_lobby = False
         self.reset()
+
         self.update_players(message)
 
         self.base_round_time = message.base_round_time
@@ -127,7 +128,7 @@ class WerewolfClientController():
     def update_players(self, message):
         self.players = []
         for player_dict in message.players:
-            player = Player(dict_obj=player_dict)
+            player = Player(**player_dict)
             if player.id == self.player.id:
                 self.compare_and_update_own_state(player)
             self.players.append(player)
@@ -163,8 +164,12 @@ class WerewolfClientController():
     def transition_phase_base(self):
         if self.phase == 4:
             return
-        self.ui.update_timer(self.werewolf_round_time)
+        
+        # self.phase = self.get_role_phase()
+
         self.phase = 2
+
+        self.ui.update_timer(self.base_round_time) # add correct round time
         self.ui.update_window()
 
     def reset_round(self):
@@ -208,20 +213,20 @@ class WerewolfClientController():
         if self.phase == 0:
             return True
         # Werewolf at night
-        if self.phase == 2 and self.player.role == 1 and votee.is_alive:
+        if self.phase == 2 and self.player.role.id == 1 and votee.is_alive:
             return True
         return False
 
     def sees_role_of(self, player):
         if hasattr(player, 'role') and player.role is not None:
             if self.game_is_finished:
-                role = Role.get_role_name_from_id(player.role).lower()
-            elif player.role == 1 and self.player.role == 1:
-                role = Role.get_role_name_from_id(player.role).lower()
+                role = Role.get_role_name_from_id(player.role.id).lower()
+            elif player.role.id == 1 and self.player.role.id == 1:
+                role = Role.get_role_name_from_id(player.role.id).lower()
             elif not player.is_alive:
-                role = Role.get_role_name_from_id(player.role).lower()
+                role = Role.get_role_name_from_id(player.role.id).lower()
             elif player.id == self.player.id:
-                role = Role.get_role_name_from_id(player.role).lower()
+                role = Role.get_role_name_from_id(player.role.id).lower()
             else:
                 role = 'unknown'
         else:

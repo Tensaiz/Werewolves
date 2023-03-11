@@ -20,7 +20,7 @@ class WerewolfNetworkClient:
         self.audio = pyaudio.PyAudio()
         self.audio_settings = {
             'format': pyaudio.paInt16,
-            'chunks': 4096*2,
+            'chunks': 4096,
             'channels': 2,
             'rate': 48000
         }
@@ -60,7 +60,6 @@ class WerewolfNetworkClient:
         self.base_socket.send(message.encode("utf-8"))
 
     def on_key_press(self, key):
-        print("YO")
         if hasattr(key, 'char') and key.char == 'v' and not self.is_muted:
             self.controller.ui.mark_player_speaking(self.controller.player.id)
             speech_bytes = self.input_stream.read(self.audio_settings['chunks'])
@@ -88,7 +87,7 @@ class WerewolfNetworkClient:
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 6)
+                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4 * 16)
                 message = json.loads(message_bytes.decode('utf-8'))
                 sender_id = message['sender_id']
 

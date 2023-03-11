@@ -6,6 +6,8 @@ import time
 import uuid
 import random
 
+from game.role import Role
+
 """
 Game agenda
 
@@ -51,6 +53,7 @@ class GameProgression():
         self.round = 0
         self.base_round_time = 6
         self.werewolf_round_time = 6
+        self.role_decide_time = 6
         self.transition_time = 2
         self.server = server
         self.round_timer = None
@@ -124,7 +127,8 @@ class GameProgression():
                 "players": self.map_players(),
                 "base_round_time": self.base_round_time,
                 "werewolf_round_time": self.werewolf_round_time,
-                "transition_time": self.transition_time
+                "transition_time": self.transition_time,
+                "role_decide_time": self.role_decide_time
             })
 
         if self.game_finished():
@@ -132,6 +136,25 @@ class GameProgression():
 
         self.round_timer = Timer(self.base_round_time, lambda: self.finish_voting("base"))
         self.round_timer.start()
+
+    '''
+    Return role ids of the roles that have a turn during the night based on the player list argument
+    '''
+    @staticmethod
+    def get_phases(players):
+        # Seer -> werewolves -> witch
+        phases = []
+        for player in players:
+            if not player.is_alive:
+                continue
+            elif player.role.id == 4:
+                # Seer turn this round
+                phases.append(4)
+            elif player.role.id == 2 and (player.role.has_healing_potion or player.role.has_killing_potion):
+                # Witch turn
+                phases.append(2)
+        return phases
+
 
     def game_finished(self):
         winner = self.calculate_winners()
@@ -146,8 +169,8 @@ class GameProgression():
 
     def calculate_winners(self):
         alive_players = list(filter(lambda x: x.is_alive, self.players))
-        werewolf_count = len(list(filter(lambda x: x.role == 1, alive_players)))
-        villager_count = len(list(filter(lambda x: x.role == 0, alive_players)))
+        werewolf_count = len(list(filter(lambda x: x.role.id == 1, alive_players)))
+        villager_count = len(list(filter(lambda x: x.role.id == 0, alive_players)))
 
         if werewolf_count >= villager_count:
             winner = 1
@@ -206,7 +229,7 @@ class GameProgression():
 
     def change_player_audio(self, mute):
         for player in self.players:
-            if player.role == 0:
+            if player.role.id == 0:
                 player.is_deafened = mute if player.is_alive else False
                 player.is_muted = mute
             if not player.is_alive:
@@ -244,13 +267,14 @@ class GameProgression():
         role_assignment = [0] * amount_of_villagers + [1] * amount_of_werewolves
         random.shuffle(role_assignment)
         for i, player in enumerate(self.players):
-            player.role = role_assignment[i]
+            id = role_assignment[i]
+            player.role = Role.get_role_class_from_id(id)()
 
     def map_players(self):
         return list(map(lambda x: {
             "name": x.name,
             "id": x.id,
-            "role": x.role,
+            "role": vars(x.role),
             "is_alive": x.is_alive,
             "is_muted": x.is_muted,
             "is_deafened": x.is_deafened
