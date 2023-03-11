@@ -17,6 +17,7 @@ class WerewolfClientController():
 
         self.player = Player()
         self.players = []
+        self.is_player_host = False
 
         self.round = 0
         self.phase = 'Civilians voting'
@@ -125,6 +126,7 @@ class WerewolfClientController():
 
     def set_id(self, message):
         self.player.id = message.id
+        self.is_player_host = message.is_host
 
     def update_pregame_lobby(self, message):
         self.players = []

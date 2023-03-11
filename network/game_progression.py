@@ -96,7 +96,8 @@ class GameProgression():
         self.players.append(player)
         sender.send({
             "action": "REGISTER_PLAYER",
-            "id": player_id
+            "id": player_id,
+            "is_host": len(self.players) == 1
         })
 
         self.server.broadcast({
