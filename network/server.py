@@ -66,7 +66,7 @@ class AudioClientThread(threading.Thread):
     def run(self):
         try:
             while True:
-                data = self.socket.recv(4096*4*16)
+                data = self.socket.recv(4096 * 4 * 16*4)
                 if not data:
                     self.server.remove_audio_client(self)
                     break

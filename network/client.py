@@ -1,3 +1,4 @@
+import re
 import socket
 import threading
 import time
@@ -15,7 +16,6 @@ class WerewolfNetworkClient:
         self.port = port
         self.base_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         # Audio
         self.audio = pyaudio.PyAudio()
         self.audio_settings = {
@@ -87,19 +87,31 @@ class WerewolfNetworkClient:
     def handle_audio(self):
         while True:
             if not self.is_deafened:
-                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4 * 16)
-                message = json.loads(message_bytes.decode('utf-8'))
-                sender_id = message['sender_id']
+                message_bytes = self.audio_socket.recv(self.audio_settings['chunks'] * 4 * 16 * 4)
+                try:
+                    message = message_bytes.decode('utf-8')
+                    object_indices = [m.start() for m in re.finditer("sender_id", message)]
 
-                if sender_id != self.controller.player.id:
-                    if message["status"] == 0:
-                        self.controller.ui.mark_player_speaking(sender_id)
-                        audio_bytes = base64.b64decode(message['data'])
-                        # self.play_audio(audio_bytes, sender_id)
-                        t = threading.Thread(target=lambda: self.play_audio(audio_bytes, sender_id))
-                        t.start()
-                    else:
-                        self.controller.ui.mark_player_done_speaking(sender_id)
+                    for i, obj_idx in enumerate(object_indices):
+                        start_idx = obj_idx - 2
+                        end_idx = object_indices[i+1] - 2 if i < len(object_indices) - 1 else len(message)
+
+                        message_obj = json.loads(message[start_idx:end_idx])
+                        sender_id = message_obj['sender_id']
+
+                        if sender_id != self.controller.player.id:
+                            if message_obj["status"] == 0:
+                                self.controller.ui.mark_player_speaking(sender_id)
+                                audio_bytes = base64.b64decode(message_obj['data'])
+                                # self.play_audio(audio_bytes, sender_id)
+                                self.play_audio(audio_bytes, sender_id)
+                                t = threading.Thread(target=lambda: self.play_audio(audio_bytes, sender_id))
+                                t.start()
+                            else:
+                                self.controller.ui.mark_player_done_speaking(sender_id)
+                except Exception as e:
+                    print(message_bytes.decode('utf-8'))
+                    print(e)
 
     def select_output_stream(self):
         while True:

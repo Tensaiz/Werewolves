@@ -2,20 +2,6 @@ from game.role import Role
 
 class Player():
     def __init__(self, name='', client=None, dict_obj=None, id=-1, role=None, is_alive=True, is_muted=False, is_deafened=False):
-        if dict_obj:
-            for key in dict_obj:
-                setattr(self, key, dict_obj[key])
-            
-            if dict_obj['role']:
-                role = dict_obj['role']
-                role_id = role['id']
-                del role['id']
-                del role['name']
-                self.role = Role.get_role_class_from_id(role_id)(**role)
-            else:
-                self.role = None
-
-        else:
             self.id = id
             self.name = name
             self.client = client
