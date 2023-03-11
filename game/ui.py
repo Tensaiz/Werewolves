@@ -119,12 +119,17 @@ class UI(ctk.CTk):
         if self.mute_button is None:
             # Mute button
             self.mute_button = ctk.CTkButton(self, width=100, text="Mute", font=ctk.CTkFont(size=12, weight="bold"), command=self.toggle_mute, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-            self.mute_button.grid(row=3, column=0, padx=(25, 25), pady=(10, 10), sticky="w")
+            self.mute_button.grid(row=3, column=0, padx=(25, 0), pady=(10, 10), sticky="w")
 
         if self.deafened_label is None:
             # Deafened icon
             self.deafened_label = ctk.CTkLabel(self, text='Not deafened', font=ctk.CTkFont(size=12, weight="bold"))
-            self.deafened_label.grid(row=3, column=1, padx=(15, 50), pady=(10, 10), sticky="w")
+            self.deafened_label.grid(row=3, column=1, padx=(15, 15), pady=(10, 10), sticky="we")
+
+        if self.is_pregame_lobby and self.controller.is_player_host:
+            # Gear icon
+            self.deafened_label = ctk.CTkButton(self, width=100, text="Config", font=ctk.CTkFont(size=12, weight="bold"), command=self.configure_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
+            self.deafened_label.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="e")
 
         if not self.is_pregame_lobby:
             if self.state_label is None:
@@ -139,7 +144,7 @@ class UI(ctk.CTk):
             if self.start_game_button is None:
                 self.start_game_button = ctk.CTkButton(self, state=state, width=100, text="Start game",
                                                        font=ctk.CTkFont(size=12, weight="bold"), command=self.start_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-                self.start_game_button.grid(row=4, column=1, padx=(10, 10), pady=10, sticky="w")
+                self.start_game_button.grid(row=4, column=1, padx=(10, 10), pady=10, sticky="ew")
 
             self.start_game_button.configure(state=state)
 
@@ -238,6 +243,9 @@ class UI(ctk.CTk):
             if player_frame.vote:
                 player_frame.hide_vote_button()
         self.show_restart_button()
+
+    def configure_game():
+        pass
 
     def reset_for_next_game(self):
         for player_frame in self.player_frame_list:
