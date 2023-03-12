@@ -28,7 +28,8 @@ class Role:
             2: 'Witch',
             3: 'Hunter',
             4: 'Seer',
-            5: 'Cupid'
+            5: 'Cupid',
+            6: 'Innocent'
         }
         return role_name_dict[role_id]
 
@@ -40,7 +41,8 @@ class Role:
             2: Witch,
             3: Hunter,
             4: Seer,
-            5: Cupid
+            5: Cupid,
+            6: Innocent
         }
         return role_class_dict[role_id]
 
