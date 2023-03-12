@@ -180,7 +180,7 @@ class GameProgression():
     def calculate_winners(self):
         alive_players = list(filter(lambda x: x.is_alive, self.players))
         werewolf_count = len(list(filter(lambda x: x.role.id == 1, alive_players)))
-        villager_count = len(list(filter(lambda x: x.role.id == 0, alive_players)))
+        villager_count = len(list(filter(lambda x: x.role.id != 1, alive_players)))
 
         if werewolf_count >= villager_count:
             winner = 1

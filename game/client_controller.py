@@ -122,6 +122,7 @@ class WerewolfClientController():
         self.base_round_time = message.base_round_time
         self.werewolf_round_time = message.werewolf_round_time
         self.transition_time = message.transition_time
+        self.role_decide_time = message.role_decide_time
 
         self.ui.purge_pregame_widgets()
         self.ui.after(100, lambda: self.ui.update_timer(self.base_round_time))
@@ -203,19 +204,18 @@ class WerewolfClientController():
 
     def seer_round(self):
         self.phase = 'Seer peeking'
-
         self.ui.update_timer(self.role_decide_time)
         self.ui.update_window()
 
         transition_timer = Timer(self.role_decide_time, self.finish_seer_round)
         transition_timer.start()
 
-
     def finish_seer_round(self):
+        self.remove_voting_ui()
         self.seer_vote = None
+        self.phase = 'Transitioning...'
         self.ui.update_window()
         self.transition_to_next_night_round()
-
 
     def witch_round(self):
         self.phase = 'Witch healing or poisoning'
@@ -274,7 +274,8 @@ class WerewolfClientController():
         # Werewolf at night
         if self.phase == 'Werewolves eating' and self.player.role.id == 1:
             return True
-        if self.phase == 'Seer peeking' and self.seer_vote:
+        # Seer at night
+        if self.phase == 'Seer peeking' and self.player.role.id == 4 and not self.seer_vote:
             return True
         return False
 
@@ -307,7 +308,6 @@ class WerewolfClientController():
             vote = 'WEREWOLF_VOTE'
         elif self.phase == 'Seer peeking':
             self.seer_vote = player_id
-            self.ui.update_window()
             return
         message = {
             'action': vote,

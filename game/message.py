@@ -31,5 +31,5 @@ class Message():
         self.is_host = is_host
 
     def __str__(self):
-        return vars(self)
+        return str(vars(self))
     
