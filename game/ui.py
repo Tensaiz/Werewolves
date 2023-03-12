@@ -9,8 +9,8 @@ ROOT_BACKGROUND = '#101010'
 SCROLLABLE_FRAME_COLOR = '#222020'
 PLAYER_FRAME_COLOR = '#191716'
 PLAYER_SELECTED_FRAME_COLOR = '#7E8D85'
-TEAM_WON_COLOR = '#20BF55'
-TEAM_LOST_COLOR = '#C1292E'
+TEAM_WON_COLOR = '#09814A'
+TEAM_LOST_COLOR = '#4e0f11'
 BUTTON_COLOR = '#4e0f11'
 BUTTON_HOVER_COLOR = '#3E090B'
 
@@ -30,6 +30,12 @@ class UI(ctk.CTk):
         self.is_pregame_lobby = True
         self.is_daytime = True
 
+        self.default_font_bold = ctk.CTkFont(size=14, weight="bold")
+        self.default_font_button = ctk.CTkFont(size=12, weight="bold")
+
+        icon = tkinter.PhotoImage(file="resources/werewolves_icon.png")
+        self.iconphoto(False, icon)
+
         self.init_pregame_vars()
         self.write_init_UI()
 
@@ -48,11 +54,14 @@ class UI(ctk.CTk):
         self.deafened_label = None
         self.state_label = None
         self.role_image = None
+        self.config_button = None
 
     def write_init_UI(self):
         # configure grid layout (3x3)
         self.grid_rowconfigure(2, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1, uniform="a")
+        self.grid_columnconfigure(1, weight=1, uniform="a")
+        self.grid_columnconfigure(2, weight=1, uniform="a")
 
         self.draw_top()
 
@@ -81,30 +90,30 @@ class UI(ctk.CTk):
     def draw_top(self):
         if not self.is_pregame_lobby and self.controller.player.role is not None:
             if self.role_label is None:
-                self.role_label = ctk.CTkLabel(self, text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}", font=ctk.CTkFont(size=21, weight="bold"))
-                self.role_label.grid(row=0, column=0, pady=(10, 10), padx=(25, 25), sticky="w")
+                self.role_label = ctk.CTkLabel(self, text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}", font=self.default_font_bold)
+                self.role_label.grid(row=0, column=0, pady=10, padx=(25, 0), sticky="nws")
             self.role_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}")
 
             day_state = self.controller.get_phase_name(self.controller.phase)
 
             if self.daytime_label is None:
-                self.daytime_label = ctk.CTkLabel(self, text=day_state, font=ctk.CTkFont(size=16, weight="bold"))
-                self.daytime_label.grid(row=0, column=1, pady=(10, 10), padx=(25, 25), sticky="w")
+                self.daytime_label = ctk.CTkLabel(self, text=day_state, font=self.default_font_bold)
+                self.daytime_label.grid(row=0, column=1, pady=10, sticky="news")
             self.daytime_label.configure(text=day_state)
 
             if self.timer_label is None:
                 # Timer
-                self.timer_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=21, weight="bold"))
-                self.timer_label.grid(row=0, column=2, padx=(0, 25), pady=(10, 10), sticky="e")
+                self.timer_label = ctk.CTkLabel(self, text="", font=self.default_font_bold)
+                self.timer_label.grid(row=0, column=2, padx=(0, 25), pady=10, sticky="nes")
         else:
             # Pre game lobby label
             if self.pregame_label is None:
-                self.pregame_label = ctk.CTkLabel(self, text="Pre-game Lobby - Start game when everyone is in", font=ctk.CTkFont(size=12, weight="bold"))
+                self.pregame_label = ctk.CTkLabel(self, text="Pre-game Lobby - Start game when everyone is in", font=self.default_font_bold)
                 self.pregame_label.grid(row=0, column=0, columnspan=3, pady=10, padx=(25, 25), sticky="ew")
 
             # Player count
             if self.player_count is None:
-                self.player_count = ctk.CTkLabel(self, text=f"Players: {len(self.controller.players)}", font=ctk.CTkFont(size=12, weight="bold"))
+                self.player_count = ctk.CTkLabel(self, text=f"Players: {len(self.controller.players)}", font=self.default_font_bold)
                 self.player_count.grid(row=1, column=0, columnspan=3, pady=(0, 0), padx=(25, 25), sticky="enw")
             self.player_count.configure(text=f"Players: {len(self.controller.players)}")
 
@@ -112,31 +121,35 @@ class UI(ctk.CTk):
             players_required = cc.MIN_PLAYERS - len(self.controller.players)
             players_required_text = players_required if players_required >= 0 else 0
             if self.player_required_count is None:
-                self.player_required_count = ctk.CTkLabel(self, text=f"{players_required_text} more players required", font=ctk.CTkFont(size=12, weight="bold"))
+                self.player_required_count = ctk.CTkLabel(self, text=f"{players_required_text} more players required", font=self.default_font_bold)
                 self.player_required_count.grid(row=1, column=0, columnspan=3, pady=(25, 0), padx=(25, 25), sticky="new")
             self.player_required_count.configure(text=f"{players_required_text} more players required")
 
     def draw_bottom(self):
         if self.mute_button is None:
             # Mute button
-            self.mute_button = ctk.CTkButton(self, width=100, text="Mute", font=ctk.CTkFont(size=12, weight="bold"), command=self.toggle_mute, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-            self.mute_button.grid(row=3, column=0, padx=(25, 0), pady=(10, 10), sticky="w")
+            self.mute_button = ctk.CTkButton(self, width=100, text="Mute", font=self.default_font_button, command=self.toggle_mute, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
+            self.mute_button.grid(row=3, column=0, padx=(25, 0), pady=(10, 10), sticky="ew")
 
         if self.deafened_label is None:
             # Deafened icon
-            self.deafened_label = ctk.CTkLabel(self, text='Not deafened', font=ctk.CTkFont(size=12, weight="bold"))
-            self.deafened_label.grid(row=3, column=1, padx=(15, 15), pady=(10, 10), sticky="we")
+            self.deafened_label = ctk.CTkLabel(self, text='Not deafened', font=self.default_font_button)
 
-        if self.is_pregame_lobby and self.controller.is_player_host:
+        deafened_col = 1 if not self.is_pregame_lobby or (self.is_pregame_lobby and self.controller.is_player_host) else 2
+        self.deafened_label.grid(row=3, column=deafened_col, pady=(10, 10), sticky="ew")
+
+        if self.is_pregame_lobby and self.controller.is_player_host and self.config_button is None:
             # Gear icon
-            self.deafened_label = ctk.CTkButton(self, width=100, text="Config", font=ctk.CTkFont(size=12, weight="bold"), command=self.configure_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-            self.deafened_label.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="e")
+            self.config_button = ctk.CTkButton(self, width=100, text="Config", font=self.default_font_button, command=self.configure_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
+            self.config_button.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="ew")
 
         if not self.is_pregame_lobby:
+            if self.config_button is not None:
+                self.config_button.grid_remove()
             if self.state_label is None:
                 # Living state text
-                self.state_label = ctk.CTkLabel(self, text="Alive", font=ctk.CTkFont(size=12, weight="bold"))
-                self.state_label.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="nsew")
+                self.state_label = ctk.CTkLabel(self, text="Alive", font=self.default_font_button)
+                self.state_label.grid(row=3, column=2, padx=(0, 25), pady=(10, 10), sticky="ew")
         else:
             if not self.controller.is_player_host:
                 return
@@ -144,7 +157,7 @@ class UI(ctk.CTk):
             state = tkinter.NORMAL if cc.MIN_PLAYERS - len(self.controller.players) <= 0 else tkinter.DISABLED
             if self.start_game_button is None:
                 self.start_game_button = ctk.CTkButton(self, state=state, width=100, text="Start game",
-                                                       font=ctk.CTkFont(size=12, weight="bold"), command=self.start_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
+                                                       font=self.default_font_button, command=self.start_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
                 self.start_game_button.grid(row=4, column=1, padx=(10, 10), pady=10, sticky="ew")
 
             self.start_game_button.configure(state=state)
@@ -157,7 +170,7 @@ class UI(ctk.CTk):
                     # other player
                     self.player_frame_list[i].after(200, self.player_frame_list[i].destroy)
                     self.player_frame_list[i] = PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player, fg_color=PLAYER_FRAME_COLOR)
-                    self.player_frame_list[i].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="we")
+                    self.player_frame_list[i].grid(row=i, column=0, padx=(10, 10), pady=10, sticky="we")
 
                 else:
                     # Update player
@@ -173,7 +186,7 @@ class UI(ctk.CTk):
                         self.player_frame_list[i].add_role_image()
             else:
                 self.player_frame_list.append(PlayerName(self.player_list_frame, player, self.controller, self.is_pregame_lobby, self.vote_player, fg_color=PLAYER_FRAME_COLOR))
-                self.player_frame_list[-1].grid(row=i, column=0, padx=(20, 10), pady=10, sticky="we")
+                self.player_frame_list[-1].grid(row=i, column=0, padx=(10, 10), pady=10, sticky="we")
 
         if len(current_players) > len(self.controller.players):
             for i in range(len(self.controller.players), len(current_players)):
@@ -267,7 +280,7 @@ class UI(ctk.CTk):
         if not self.controller.is_player_host:
             return
 
-        self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
+        self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=self.default_font_button,
                                             command=self.controller.restart_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
         self.restart_button.grid(row=4, column=1, padx=(10, 10), pady=(10, 20), sticky="ew")
 
@@ -333,14 +346,17 @@ class PlayerName(ctk.CTkFrame):
         self.columnconfigure(0, weight=0)
         self.columnconfigure(1, weight=1)
 
+        self.default_font_bold = ctk.CTkFont(size=14, weight="bold")
+        self.default_font_button = ctk.CTkFont(size=12, weight="bold")
+
         player_id = player.id
 
-        self.label = ctk.CTkLabel(self, text=self.player.name, font=ctk.CTkFont(size=18, weight="bold"), anchor="w")
+        self.label = ctk.CTkLabel(self, text=self.player.name, font=self.default_font_bold, anchor="w")
         self.label.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 
         if not is_pregame_lobby:
             if self.controller.can_vote_on(player):
-                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"),
+                self.vote = ctk.CTkButton(self, width=50, text="Vote", font=self.default_font_button,
                                           command=lambda p=player_id: vote_callback(p), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
                 self.vote.grid(row=0, column=2, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 
@@ -361,7 +377,7 @@ class PlayerName(ctk.CTkFrame):
             self.role_image.configure(image=image)
 
     def add_vote_button(self, vote_callback):
-        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=ctk.CTkFont(size=12, weight="bold"),
+        self.vote = ctk.CTkButton(self, width=50, text="Vote", font=self.default_font_button,
                                   command=lambda p=self.player.id: vote_callback(p), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
         self.vote.grid(row=0, column=1, columnspan=2, padx=(0, 10), pady=10, sticky="e")
 

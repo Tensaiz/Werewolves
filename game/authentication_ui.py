@@ -15,7 +15,7 @@ class AuthenticationUI(ctk.CTkToplevel):
         self.geometry("320x320")
         self.title("Werewolves connector")
         self.minsize(250, 350)
-        self.iconbitmap("resources/werewolves_icon.ico")
+
         self.protocol("WM_DELETE_WINDOW", self.quit)
 
         # configure grid layout (3x3)

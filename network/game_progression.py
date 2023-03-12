@@ -326,10 +326,24 @@ class GameProgression():
                 return most_common[0][0]
 
     def assign_roles(self):
-        amount_of_werewolves = len(self.players) // 4
-        amount_of_villagers = len(self.players) - amount_of_werewolves - 1
-        role_assignment = [0] * amount_of_villagers + [1] * amount_of_werewolves + [2]
+        no_of_werewolves = len(self.players) // 4
+        no_of_seer = self.config.seer_role
+        no_of_hunter = self.config.hunter_role
+        no_of_inno = self.config.innocent_role
+        no_of_witch = self.config.witch_role
+        no_of_cupid = self.config.cupid_role
+        no_of_alternates = no_of_seer + no_of_hunter + no_of_inno + no_of_witch + no_of_cupid
+        no_of_villagers = len(self.players) - no_of_werewolves - no_of_alternates
+
+        role_assignment = [0] * no_of_villagers + [1] * no_of_werewolves
+        role_assignment += [2] * no_of_witch
+        role_assignment += [3] * no_of_hunter
+        role_assignment += [4] * no_of_seer
+        role_assignment += [5] * no_of_cupid
+        role_assignment += [6] * no_of_inno
+
         random.shuffle(role_assignment)
+
         for i, player in enumerate(self.players):
             id = role_assignment[i]
             player.role = Role.get_role_class_from_id(id)()
