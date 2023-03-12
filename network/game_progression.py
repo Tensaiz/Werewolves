@@ -82,6 +82,7 @@ class GameProgression():
     def restart(self):
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
+        self.witch_votes = {}
         self.round = 0
         self.round_timer = None
 

@@ -21,9 +21,7 @@ class WerewolfClientController():
         self.is_player_host = False
 
         self.round = 0
-        self.phase = 'Civilians voting'
-
-        self.seer_vote = None
+        self.phase = 0
 
         self.ui = UI(self)
         self.ui.iconbitmap(default="resources/werewolves_icon.ico")
@@ -69,6 +67,17 @@ class WerewolfClientController():
     def dict_to_json(self, d):
         return json.dumps(d)
 
+    def get_phase_name(self, phase):
+        phase_names = {
+            -1: 'Transitioning...',
+            0: 'Civilians voting',
+            1: 'Werewolves eating',
+            2: 'Seer peeking',
+            3: 'Witch healing or poisoning',
+            10: 'Game finished'
+        }
+        return phase_names[phase]
+
     def disconnect(self):
         pass
 
@@ -106,11 +115,11 @@ class WerewolfClientController():
             # players
             self.handle_werewolf_vote(message)
         elif message.action == "FINISH_WITCH_VOTE":
-            self.handle_witch_vote(message)
+            self.handle_witch_vote_finished(message)
         elif message.action == "FINISH_GAME":
             # winner: 0 -> villager, 1 -> werewolf
             # Players list
-            self.phase = 'Game finished'
+            self.phase = 10
             self.game_is_finished = True
             self.finalize_game_ui(message)
             return
@@ -170,7 +179,7 @@ class WerewolfClientController():
 
     def handle_base_vote_finish(self, message):
         self.update_players(message)
-        self.phase = 'Transitioning...'
+        self.phase = -1
         self.remove_voting_ui()
 
         self.next_rounds = GameProgression.get_phases(self.players)
@@ -198,16 +207,16 @@ class WerewolfClientController():
         transition_timer.start()
 
     def werewolves_voting(self):
-        if self.phase == 'Game finished':
+        if self.phase == 10:
             return
 
-        self.phase = 'Werewolves eating'
+        self.phase = 1
 
         self.ui.update_timer(self.config.werewolf_round_time)
         self.ui.update_window()
 
     def seer_round(self):
-        self.phase = 'Seer peeking'
+        self.phase = 2
         self.ui.update_timer(self.config.role_decide_time)
         self.ui.update_window()
 
@@ -217,36 +226,37 @@ class WerewolfClientController():
     def finish_seer_round(self):
         self.remove_voting_ui()
         self.seer_vote = None
-        self.phase = 'Transitioning...'
+        self.phase = -1
         self.ui.update_window()
         self.transition_to_next_night_round()
 
     def witch_round(self):
-        self.phase = 'Witch healing or poisoning'
+        self.phase = 3
 
-        self.ui.update_timer(self.config.role_decide_time)  # add correct round time
+        self.ui.update_timer(self.config.role_decide_time)
         self.ui.update_window()
-
-        transition_timer = Timer(self.config.role_decide_time, self.transition_to_next_night_round)
-        transition_timer.start()
+        self.ui.show_witch_ui()
 
     def reset_round(self):
         self.round += 1
-        self.phase = 'Civilians voting'
+        self.phase = 0
         self.ui.update_window()
         self.ui.update_timer(self.config.base_round_time)
 
     def handle_werewolf_vote(self, message):
-        print('Werewolf voting done!')
         self.werewolf_votee = message.votee
+        if 2 not in self.next_rounds:
+            self.update_players(message)
         self.handle_night_vote(message)
 
-    def handle_witch_vote(self, message):
+    def handle_witch_vote_finished(self, message):
         self.handle_night_vote(message)
+        self.update_players(message)
+        self.ui.remove_witch_ui()
+        self.werewolf_votee = -1
 
     def handle_night_vote(self, message):
-        self.update_players(message)
-        self.phase = 'Transitioning'
+        self.phase = -1
         self.remove_voting_ui()
         self.transition_to_next_night_round()
 
@@ -271,16 +281,24 @@ class WerewolfClientController():
                 self.compare_and_update_own_state(player)
 
     def can_vote_on(self, votee):
-        if not (self.player.is_alive and votee.is_alive and votee.id != self.player.id and not self.game_is_finished):
+        if not (self.player.is_alive and votee.is_alive and not self.game_is_finished):
+            return False
+        if votee.id == self.player.id and not (self.phase == 3 and self.player.role.id == 2 and self.player.role.has_healing_potion and votee.id == self.werewolf_votee):
             return False
         # Everyone during voting day
-        if self.phase == 'Civilians voting':
+        if self.phase == 0:
             return True
         # Werewolf at night
-        if self.phase == 'Werewolves eating' and self.player.role.id == 1:
+        if self.phase == 1 and self.player.role.id == 1:
             return True
         # Seer at night
-        if self.phase == 'Seer peeking' and self.player.role.id == 4 and not self.seer_vote:
+        if self.phase == 2 and self.player.role.id == 4 and not self.seer_vote:
+            return True
+        # Witch at night to save werewolf votee
+        if self.phase == 3 and self.player.role.id == 2 and self.player.role.has_healing_potion and votee.id == self.werewolf_votee:
+            return True
+        # Witch at night to kill someone
+        if self.phase == 3 and self.player.role.id == 2 and self.player.role.has_killing_potion:
             return True
         return False
 
@@ -307,12 +325,15 @@ class WerewolfClientController():
         return role
 
     def vote_player(self, player_id):
-        if self.phase == 'Civilians voting':
+        if self.phase == 0:
             vote = 'BASE_VOTE'
-        elif self.phase == 'Werewolves eating':
+        elif self.phase == 1:
             vote = 'WEREWOLF_VOTE'
-        elif self.phase == 'Seer peeking':
+        elif self.phase == 2:
             self.handle_seer_vote(player_id)
+            return
+        elif self.phase == 3:
+            self.handle_witch_vote(player_id)
             return
         message = {
             'action': vote,
@@ -327,6 +348,14 @@ class WerewolfClientController():
         player_frame.add_role_image()
         self.ui.update_window()
 
+    def handle_witch_vote(self, player_id):
+        message = {
+            'action': 'WITCH_VOTE',
+        }
+        key = 'save' if player_id == self.werewolf_votee else 'kill'
+        message[key] = player_id
+        self.send_message(message)
+
     def restart_game(self):
         self.send_message(
             {'action': 'NEW_GAME'}
@@ -335,5 +364,7 @@ class WerewolfClientController():
     def reset(self):
         self.game_is_finished = False
         self.round = 0
-        self.phase = 'Civilians voting'
+        self.phase = 0
+        self.werewolf_votee = -1
+        self.seer_vote = None
         self.ui.reset_for_next_game()
