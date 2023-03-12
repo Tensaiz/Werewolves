@@ -3,6 +3,7 @@ from PIL import Image
 import customtkinter as ctk
 from game.role import Role
 import game.client_controller as cc
+from game.configuration_ui import ConfigurationUI
 
 ROOT_BACKGROUND = '#101010'
 SCROLLABLE_FRAME_COLOR = '#222020'
@@ -99,12 +100,12 @@ class UI(ctk.CTk):
             # Pre game lobby label
             if self.pregame_label is None:
                 self.pregame_label = ctk.CTkLabel(self, text="Pre-game Lobby - Start game when everyone is in", font=ctk.CTkFont(size=12, weight="bold"))
-                self.pregame_label.grid(row=0, column=0, columnspan=3, pady=(25, 0), padx=(25, 25))
+                self.pregame_label.grid(row=0, column=0, columnspan=3, pady=10, padx=(25, 25), sticky="ew")
 
             # Player count
             if self.player_count is None:
                 self.player_count = ctk.CTkLabel(self, text=f"Players: {len(self.controller.players)}", font=ctk.CTkFont(size=12, weight="bold"))
-                self.player_count.grid(row=1, column=0, columnspan=2, pady=(0, 0), padx=(25, 25), sticky="n")
+                self.player_count.grid(row=1, column=0, columnspan=3, pady=(0, 0), padx=(25, 25), sticky="enw")
             self.player_count.configure(text=f"Players: {len(self.controller.players)}")
 
             # Player required count
@@ -112,7 +113,7 @@ class UI(ctk.CTk):
             players_required_text = players_required if players_required >= 0 else 0
             if self.player_required_count is None:
                 self.player_required_count = ctk.CTkLabel(self, text=f"{players_required_text} more players required", font=ctk.CTkFont(size=12, weight="bold"))
-                self.player_required_count.grid(row=1, column=0, columnspan=2, pady=(25, 0), padx=(25, 25), sticky="s")
+                self.player_required_count.grid(row=1, column=0, columnspan=3, pady=(25, 0), padx=(25, 25), sticky="new")
             self.player_required_count.configure(text=f"{players_required_text} more players required")
 
     def draw_bottom(self):
@@ -244,8 +245,9 @@ class UI(ctk.CTk):
                 player_frame.hide_vote_button()
         self.show_restart_button()
 
-    def configure_game():
-        pass
+    def configure_game(self):
+        self.config_ui = ConfigurationUI(self.controller)
+        self.config_ui.attributes('-topmost', True)
 
     def reset_for_next_game(self):
         for player_frame in self.player_frame_list:
@@ -262,7 +264,7 @@ class UI(ctk.CTk):
 
         self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
                                             command=self.controller.restart_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-        self.restart_button.grid(row=4, column=1, padx=(10, 50), pady=(10, 20), sticky="w")
+        self.restart_button.grid(row=4, column=1, padx=(10, 10), pady=(10, 20), sticky="ew")
 
     def toggle_mute(self):
         self.controller.network_client.toggle_mute()
