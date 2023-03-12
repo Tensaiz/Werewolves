@@ -5,7 +5,8 @@ import time
 import pyaudio
 import json
 import base64
-
+import numpy as np
+from game.utils import Utils
 MAX_STREAM_POOL = 32
 
 
@@ -16,6 +17,7 @@ class WerewolfNetworkClient:
         self.port = port
         self.base_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.apply_effect = False
         # Audio
         self.audio = pyaudio.PyAudio()
         self.audio_settings = {
@@ -41,7 +43,7 @@ class WerewolfNetworkClient:
                     channels=self.audio_settings['channels'],
                     rate=self.audio_settings['rate'],
                     output=True,
-                    frames_per_buffer=self.audio_settings['chunks']
+                    frames_per_buffer=self.audio_settings['chunks'],
                 )
             )
             self.stream_pool_availability.append(True)
@@ -50,6 +52,9 @@ class WerewolfNetworkClient:
         # Game state
         self.is_muted = False
         self.is_deafened = False
+
+    def callback(self, in_data, frame_count, time_info, flag):
+        return (in_data, pyaudio.paContinue)
 
     def connect(self):
         self.base_socket.connect((self.host, self.port))
@@ -103,15 +108,26 @@ class WerewolfNetworkClient:
                             if message_obj["status"] == 0:
                                 self.controller.ui.mark_player_speaking(sender_id)
                                 audio_bytes = base64.b64decode(message_obj['data'])
-                                # self.play_audio(audio_bytes, sender_id)
-                                self.play_audio(audio_bytes, sender_id)
+
+                                # audio effect
+                                # audio_bytes = self.pitch(audio_bytes, 30)
+
                                 t = threading.Thread(target=lambda: self.play_audio(audio_bytes, sender_id))
                                 t.start()
                             else:
                                 self.controller.ui.mark_player_done_speaking(sender_id)
                 except Exception as e:
-                    print(message_bytes.decode('utf-8'))
                     print(e)
+
+    def pitch(self, bytes, shift):
+        pcm_floats = Utils.byte_to_float(bytes)
+
+        pcm_floats = np.fft.rfft(pcm_floats)
+        pcm_floats = np.roll(pcm_floats, shift)
+        pcm_floats[0:shift] = 0
+        pcm_floats = np.fft.irfft(pcm_floats)
+
+        return Utils.float_to_byte(pcm_floats)
 
     def select_output_stream(self):
         while True:
