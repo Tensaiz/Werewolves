@@ -344,4 +344,5 @@ class PlayerName(ctk.CTkFrame):
         self.vote.grid_forget()
 
     def mark_dead(self):
-        self.dead_image.grid(row=0, column=2, sticky="e")
+        if not self.controller.config.hide_deaths:
+            self.dead_image.grid(row=0, column=2, sticky="e")
