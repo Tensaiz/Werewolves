@@ -328,7 +328,7 @@ class GameProgression():
     def assign_roles(self):
         amount_of_werewolves = len(self.players) // 4
         amount_of_villagers = len(self.players) - amount_of_werewolves - 1
-        role_assignment = [0] * amount_of_villagers + [1] * amount_of_werewolves + [4]
+        role_assignment = [0] * amount_of_villagers + [1] * amount_of_werewolves + [2]
         random.shuffle(role_assignment)
         for i, player in enumerate(self.players):
             id = role_assignment[i]

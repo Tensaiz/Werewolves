@@ -85,7 +85,7 @@ class UI(ctk.CTk):
                 self.role_label.grid(row=0, column=0, pady=(10, 10), padx=(25, 25), sticky="w")
             self.role_label.configure(text=f"{Role.get_role_name_from_id(self.controller.player.role.id)}")
 
-            day_state = self.controller.phase
+            day_state = self.controller.get_phase_name(self.controller.phase)
 
             if self.daytime_label is None:
                 self.daytime_label = ctk.CTkLabel(self, text=day_state, font=ctk.CTkFont(size=16, weight="bold"))
@@ -182,7 +182,7 @@ class UI(ctk.CTk):
 
     def show_or_hide_vote_button(self, player_frame):
         can_vote = self.controller.can_vote_on(player_frame.player)
-        if can_vote and player_frame.player.id != self.controller.player.id:
+        if can_vote:
             player_frame.add_vote_button(self.vote_player)
         else:
             if player_frame.vote:
@@ -215,10 +215,15 @@ class UI(ctk.CTk):
 
     def vote_player(self, player_id):
         self.controller.vote_player(player_id)
+        self.remove_previous_mark(player_id)
         self.mark_voted(player_id)
-        if self.current_vote_id:
-            self.remove_previous_marks(self.current_vote_id)
         self.current_vote_id = player_id
+
+    def remove_previous_mark(self, player_id):
+        if self.controller.phase == 3 and self.current_vote_id == self.controller.werewolf_votee:
+            return
+        elif self.current_vote_id:
+            self.remove_previous_marks(self.current_vote_id)
 
     def mark_voted(self, player_id):
         for player_frame in self.player_frame_list:
@@ -251,7 +256,7 @@ class UI(ctk.CTk):
 
     def reset_for_next_game(self):
         for player_frame in self.player_frame_list:
-            player_frame.configure(fg_color='#191716')
+            player_frame.configure(fg_color=PLAYER_FRAME_COLOR, border_width=0, border_color=PLAYER_FRAME_COLOR)
             if player_frame.dead_image:
                 player_frame.dead_image.grid_forget()
         if self.restart_button:
@@ -273,6 +278,26 @@ class UI(ctk.CTk):
 
     def start_game(self):
         self.controller.start_game()
+
+    def show_witch_ui(self):
+        if self.controller.player.role.id != 2:
+            return
+        for player_frame in self.player_frame_list:
+            # Mark werewolf votee for witch
+            if player_frame.player.id == self.controller.werewolf_votee and self.controller.player.role.has_healing_potion:
+                player_frame.configure(border_width=2, border_color='red')
+                player_frame.vote.configure(text="Save")
+            elif player_frame.player.is_alive and player_frame.vote:
+                player_frame.vote.configure(text="Kill")
+
+    def remove_witch_ui(self):
+        if self.controller.player.role.id != 2:
+            return
+        for player_frame in self.player_frame_list:
+            # Mark werewolf votee for witch
+            if player_frame.player.id == self.controller.werewolf_votee:
+                player_frame.configure(border_width=0, border_color=PLAYER_FRAME_COLOR)
+                player_frame.vote.configure(text="Vote")
 
     def purge_pregame_widgets(self):
         self.pregame_label.grid_remove()
