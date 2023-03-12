@@ -23,6 +23,8 @@ class WerewolfClientController():
         self.round = 0
         self.phase = 'Civilians voting'
 
+        self.seer_vote = None
+
         self.ui = UI(self)
         self.ui.iconbitmap(default="resources/werewolves_icon.ico")
         self.auth_ui = AuthenticationUI(self)
@@ -210,6 +212,11 @@ class WerewolfClientController():
         transition_timer.start()
 
     def update_and_next_night_round(self):
+        transition_timer = Timer(self.config.role_decide_time, self.finish_seer_round)
+        transition_timer.start()
+
+    def finish_seer_round(self):
+        self.seer_vote = None
         self.ui.update_window()
         self.transition_to_next_night_round()
 
@@ -270,17 +277,25 @@ class WerewolfClientController():
         # Werewolf at night
         if self.phase == 'Werewolves eating' and self.player.role.id == 1:
             return True
+        if self.phase == 'Seer peeking' and self.seer_vote:
+            return True
         return False
 
     def sees_role_of(self, player):
         if hasattr(player, 'role') and player.role is not None:
             if self.game_is_finished:
                 role = Role.get_role_name_from_id(player.role.id).lower()
+            # Werewolves see each other
             elif player.role.id == 1 and self.player.role.id == 1:
                 role = Role.get_role_name_from_id(player.role.id).lower()
+            # Everyone can see dead players
             elif not player.is_alive:
                 role = Role.get_role_name_from_id(player.role.id).lower()
+            # You can see your own role
             elif player.id == self.player.id:
+                role = Role.get_role_name_from_id(player.role.id).lower()
+            # Seer can see the role of selected person
+            elif self.player.role.id == 4 and self.seer_vote and player.id == self.seer_vote:
                 role = Role.get_role_name_from_id(player.role.id).lower()
             else:
                 role = 'unknown'
@@ -293,6 +308,10 @@ class WerewolfClientController():
             vote = 'BASE_VOTE'
         elif self.phase == 'Werewolves eating':
             vote = 'WEREWOLF_VOTE'
+        elif self.phase == 'Seer peeking':
+            self.seer_vote = player_id
+            self.ui.update_window()
+            return
         message = {
             'action': vote,
             'sender_id': self.player.id,
