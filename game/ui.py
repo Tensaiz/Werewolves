@@ -134,7 +134,7 @@ class UI(ctk.CTk):
         if self.deafened_label is None:
             # Deafened icon
             self.deafened_label = ctk.CTkLabel(self, text='Not deafened', font=self.default_font_button)
-            
+
         deafened_col = 1 if not self.is_pregame_lobby or (self.is_pregame_lobby and self.controller.is_player_host) else 2
         self.deafened_label.grid(row=3, column=deafened_col, pady=(10, 10), sticky="ew")
 
@@ -320,7 +320,7 @@ class PlayerName(ctk.CTkFrame):
         self.dead_image = None
         self.columnconfigure(0, weight=0)
         self.columnconfigure(1, weight=1)
-        
+
         self.default_font_bold = ctk.CTkFont(size=14, weight="bold")
         self.default_font_button = ctk.CTkFont(size=12, weight="bold")
 
