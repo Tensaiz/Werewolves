@@ -264,7 +264,7 @@ class UI(ctk.CTk):
 
         self.restart_button = ctk.CTkButton(self, width=75, text="Restart game", font=ctk.CTkFont(size=14, weight="bold"),
                                             command=self.controller.restart_game, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-        self.restart_button.grid(row=4, column=1, padx=(10, 50), pady=(10, 20), sticky="w")
+        self.restart_button.grid(row=4, column=1, padx=(10, 10), pady=(10, 20), sticky="ew")
 
     def toggle_mute(self):
         self.controller.network_client.toggle_mute()
