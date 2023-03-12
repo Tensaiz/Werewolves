@@ -5,8 +5,8 @@ from threading import Timer
 import time
 import uuid
 import random
-
 from game.role import Role
+from game.game_config import GameConfig
 
 """
 Game agenda
@@ -52,13 +52,10 @@ class GameProgression():
         self.werewolf_votes = [{}]
         self.witch_votes = {}
         self.round = 0
-        self.base_round_time = 6
-        self.werewolf_round_time = 6
-        self.role_decide_time = 6
-        self.transition_time = 2
         self.server = server
         self.round_timer = None
         self.players: List[Player] = []
+        self.config: GameConfig = GameConfig()
 
     def process(self, message, sender):
         message = json.loads(message.decode('utf-8'))
@@ -73,8 +70,14 @@ class GameProgression():
             self.vote("werewolf", message)
         elif message["action"] == "WITCH_VOTE":
             self.witch_vote(message)
+        elif message["action"] == "UPDATE_CONFIG":
+            self.update_config(message)
         elif message["action"] == "NEW_GAME":
             self.restart()
+
+    def update_config(self, update):
+        cfg = update["config"]
+        self.config.load_json(cfg)
 
     def restart(self):
         self.base_votes = [{}]
@@ -129,16 +132,13 @@ class GameProgression():
             self.server.broadcast({
                 "action": "START_GAME",
                 "players": self.map_players(),
-                "base_round_time": self.base_round_time,
-                "werewolf_round_time": self.werewolf_round_time,
-                "transition_time": self.transition_time,
-                "role_decide_time": self.role_decide_time
+                "config": self.config.to_json()
             })
 
         if self.game_finished():
             return
 
-        self.round_timer = Timer(self.base_round_time, lambda: self.finish_voting("base"))
+        self.round_timer = Timer(self.config.base_round_time, lambda: self.finish_voting("base"))
         self.round_timer.start()
 
     '''
@@ -164,7 +164,6 @@ class GameProgression():
                 # Witch turn
                 phases.append(2)
         return phases
-
 
     def game_finished(self):
         winner = self.calculate_winners()
@@ -236,30 +235,30 @@ class GameProgression():
         # Transition to next phase
         if type == "base":
             # Transition to next night voting phase
-            time.sleep(self.transition_time)
+            time.sleep(self.config.transition_time)
             # Wait for Seer to view a role on client side
             if 0 in night_rounds:
-                time.sleep(self.role_decide_time)
+                time.sleep(self.config.role_decide_time)
 
             # Start calculating werewolf votes after werewolf round time
-            werewolf_timer = Timer(self.werewolf_round_time, lambda: self.finish_voting("werewolf"))
+            werewolf_timer = Timer(self.config.werewolf_round_time, lambda: self.finish_voting("werewolf"))
             werewolf_timer.start()
         elif type == "werewolf":
-            time.sleep(self.transition_time)
+            time.sleep(self.config.transition_time)
             self.round += 1
             self.base_votes.append({})
             self.werewolf_votes.append({})
 
             if 2 in night_rounds:
                 # Witch turn
-                witch_timer = Timer(self.role_decide_time, lambda: self.finish_witch_voting())
+                witch_timer = Timer(self.config.role_decide_time, lambda: self.finish_witch_voting())
                 witch_timer.start()
             else:
                 # Update player muted status and broadcast
                 self.start_round()
 
     def finish_witch_voting(self):
-        time.sleep(self.transition_time)
+        time.sleep(self.config.transition_time)
 
         witch_player = Role.get_players_by_role(self.players, 2)[0]
 
@@ -275,7 +274,7 @@ class GameProgression():
 
         if self.game_finished():
             return
-        
+
         self.change_player_audio(False)
 
         # Send latest player update

@@ -52,6 +52,7 @@ class Role:
                 players_with_role.append(player)
         return players_with_role
 
+
 class Villager(Role):
     def __init__(self, **kwargs):
         self.id = 0
@@ -65,27 +66,31 @@ class Werewolf(Role):
 
 
 class Witch(Role):
-    def __init__(self, has_healing_potion = 1, has_killing_potion = 1, **kwargs):
+    def __init__(self, has_healing_potion=1, has_killing_potion=1, **kwargs):
         self.id = 2
         super().__init__(self.id, **kwargs)
         self.has_healing_potion = has_healing_potion
         self.has_killing_potion = has_killing_potion
 
+
 class Hunter(Role):
-    def __init__(self, bullet = 1, **kwargs):
+    def __init__(self, bullet=1, **kwargs):
         self.id = 3
         super().__init__(self.id, **kwargs)
         self.bullet = bullet
+
 
 class Seer(Role):
     def __init__(self, **kwargs):
         self.id = 4
         super().__init__(self.id, **kwargs)
 
+
 class Cupid(Role):
     def __init__(self, **kwargs):
         self.id = 5
         super().__init__(self.id, **kwargs)
+
 
 class Innocent(Role):
     def __init__(self, **kwargs):

@@ -7,6 +7,7 @@ from network.client import WerewolfNetworkClient
 from game.player import Player
 from game.message import Message
 from network.game_progression import GameProgression
+from game.game_config import GameConfig
 
 MIN_PLAYERS = 1
 
@@ -21,16 +22,12 @@ class WerewolfClientController():
 
         self.round = 0
         self.phase = 'Civilians voting'
-        self.base_round_time = -1
-        self.werewolf_round_time = -1
-        self.transition_time = -1
-        self.role_decide_time = -1
 
         self.ui = UI(self)
         self.ui.iconbitmap(default="resources/werewolves_icon.ico")
         self.auth_ui = AuthenticationUI(self)
         self.network_client = None
-
+        self.config = GameConfig()
         self.next_rounds = []
 
     def set_networkclient(self, network_client: WerewolfNetworkClient):
@@ -76,6 +73,12 @@ class WerewolfClientController():
     def send_message(self, json_msg):
         self.network_client.send_message(self.dict_to_json(json_msg))
 
+    def update_config(self):
+        self.send_message({
+            "action": "UPDATE_CONFIG",
+            "config": self.config.to_json()
+        })
+
     def start_game(self):
         start_game_json = {
             'action': 'START_GAME'
@@ -117,12 +120,10 @@ class WerewolfClientController():
 
         self.update_players(message)
 
-        self.base_round_time = message.base_round_time
-        self.werewolf_round_time = message.werewolf_round_time
-        self.transition_time = message.transition_time
+        self.config.load_json(message.config)
 
         self.ui.purge_pregame_widgets()
-        self.ui.after(100, lambda: self.ui.update_timer(self.base_round_time))
+        self.ui.after(100, lambda: self.ui.update_timer(self.config.base_round_time))
 
     def set_id(self, message):
         self.player.id = message.id
@@ -186,8 +187,8 @@ class WerewolfClientController():
             self.ui.update_window()
             role_round = self.reset_round
 
-        self.ui.update_timer(self.transition_time)
-        transition_timer = Timer(self.transition_time, role_round)
+        self.ui.update_timer(self.config.transition_time)
+        transition_timer = Timer(self.config.transition_time, role_round)
         transition_timer.start()
 
     def werewolves_voting(self):
@@ -196,38 +197,36 @@ class WerewolfClientController():
 
         self.phase = 'Werewolves eating'
 
-        self.ui.update_timer(self.werewolf_round_time)
+        self.ui.update_timer(self.config.werewolf_round_time)
         self.ui.update_window()
 
     def seer_round(self):
         self.phase = 'Seer peeking'
 
-        self.ui.update_timer(self.role_decide_time)
+        self.ui.update_timer(self.config.role_decide_time)
         self.ui.update_window()
 
-        transition_timer = Timer(self.role_decide_time, self.update_and_next_night_round)
+        transition_timer = Timer(self.config.role_decide_time, self.update_and_next_night_round)
         transition_timer.start()
-
 
     def update_and_next_night_round(self):
         self.ui.update_window()
         self.transition_to_next_night_round()
 
-
     def witch_round(self):
         self.phase = 'Witch healing or poisoning'
 
-        self.ui.update_timer(self.role_decide_time) # add correct round time
+        self.ui.update_timer(self.config.role_decide_time)  # add correct round time
         self.ui.update_window()
 
-        transition_timer = Timer(self.role_decide_time, self.transition_to_next_night_round)
+        transition_timer = Timer(self.config.role_decide_time, self.transition_to_next_night_round)
         transition_timer.start()
 
     def reset_round(self):
         self.round += 1
         self.phase = 'Civilians voting'
         self.ui.update_window()
-        self.ui.update_timer(self.base_round_time)
+        self.ui.update_timer(self.config.base_round_time)
 
     def handle_werewolf_vote(self, message):
         self.werewolf_votee = message.votee
