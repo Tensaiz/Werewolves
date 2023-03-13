@@ -59,9 +59,6 @@ class WerewolfNetworkClient:
         self.is_muted = False
         self.is_deafened = False
 
-    def callback(self, in_data, frame_count, time_info, flag):
-        return (in_data, pyaudio.paContinue)
-
     def connect(self):
         self.base_socket.connect((self.host, self.port))
         self.audio_socket.connect((self.host, self.port + 1))
