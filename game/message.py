@@ -34,4 +34,3 @@ class Message():
 
     def __str__(self):
         return str(vars(self))
-    

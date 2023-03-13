@@ -7,7 +7,10 @@ import json
 import base64
 import numpy as np
 from game.utils import Utils
+
 MAX_STREAM_POOL = 32
+PITCH_RANDOMIZER_INTERVAL = 4
+PITCH_RANDOMIZER_VALUES = (20, 75)
 
 
 class WerewolfNetworkClient:
@@ -18,6 +21,9 @@ class WerewolfNetworkClient:
         self.base_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.apply_effect = False
+
+        self.pitch_interval = 1
+        self.pitch_shift = np.random.randint(PITCH_RANDOMIZER_VALUES[0], PITCH_RANDOMIZER_VALUES[1])
         # Audio
         self.audio = pyaudio.PyAudio()
         self.audio_settings = {
@@ -110,7 +116,8 @@ class WerewolfNetworkClient:
                                 audio_bytes = base64.b64decode(message_obj['data'])
 
                                 # audio effect
-                                # audio_bytes = self.pitch(audio_bytes, 30)
+                                if self.apply_effect:
+                                    audio_bytes = self.pitch(audio_bytes, self.get_shift())
 
                                 t = threading.Thread(target=lambda: self.play_audio(audio_bytes, sender_id))
                                 t.start()
@@ -118,6 +125,14 @@ class WerewolfNetworkClient:
                                 self.controller.ui.mark_player_done_speaking(sender_id)
                 except Exception as e:
                     print(e)
+
+    def get_shift(self):
+        if self.pitch_interval % PITCH_RANDOMIZER_INTERVAL == 0:
+            self.pitch_shift = np.random.randint(PITCH_RANDOMIZER_VALUES[0], PITCH_RANDOMIZER_VALUES[1])
+            self.pitch_interval = 1
+            return self.pitch_shift
+        self.pitch_interval += 1
+        return self.pitch_shift
 
     def pitch(self, bytes, shift):
         pcm_floats = Utils.byte_to_float(bytes)

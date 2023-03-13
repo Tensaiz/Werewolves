@@ -170,6 +170,14 @@ class WerewolfClientController():
         self.ui.update_living(is_alive)
 
     def update_deafened(self, deafened):
+        # Innocent never gets deafened
+        if self.player.role.id == 6:
+            if deafened:
+                self.network_client.apply_effect = True
+            else:
+                self.network_client.apply_effect = False
+            return
+
         self.ui.update_deafened(deafened)
         self.network_client.update_deafened(deafened)
 
