@@ -22,7 +22,8 @@ class ConfigurationUI(ctk.CTkToplevel):
 
         self.geometry("350x550")
         self.title("Configuration")
-        self.minsize(340, 600)
+        self.minsize(340, 500)
+        self.maxsize(360, 600)
 
         total_rows = len(CHECKBOX_SETTINGS) + len(TIME_SETTINGS) + 2
         self.grid_rowconfigure(tuple(range(total_rows)), weight=1)
