@@ -1,8 +1,8 @@
 import signal
 
-from network.server import WerewolfServer
+from network.server import Server
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-server = WerewolfServer('0.0.0.0', 27015)
+server = Server('0.0.0.0', 27015)
 server.start()

@@ -4,7 +4,7 @@ from game.player import Player
 import numpy as np
 
 
-class Utils:
+class Utils():
     @staticmethod
     def get_random_player(players):
         return random.choice(players)

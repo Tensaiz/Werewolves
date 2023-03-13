@@ -2,10 +2,10 @@ import json
 import socket
 import threading
 from typing import List
-from network.game_progression import GameProgression
+from network.manager import Manager
 
 
-class WerewolfServer:
+class Server():
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -13,7 +13,7 @@ class WerewolfServer:
         self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.audio_clients = []
         self.basic_clients: List[BaseClientThread] = []
-        self.game_progression: GameProgression = GameProgression(self)
+        self.game_progression: Manager = Manager(self)
 
     def start(self):
         self.basic_socket.bind((self.host, self.port))
@@ -57,7 +57,7 @@ class WerewolfServer:
 
 
 class AudioClientThread(threading.Thread):
-    def __init__(self, socket, address, server: WerewolfServer):
+    def __init__(self, socket, address, server: Server):
         super().__init__()
         self.socket = socket
         self.address = address
@@ -80,7 +80,7 @@ class AudioClientThread(threading.Thread):
 
 
 class BaseClientThread(threading.Thread):
-    def __init__(self, socket, address, server: WerewolfServer):
+    def __init__(self, socket, address, server: Server):
         super().__init__()
         self.socket = socket
         self.address = address

@@ -1,7 +1,7 @@
 import json
 
 
-class GameConfig():
+class Config():
     def __init__(self):
         self.number_of_werewolves = "auto"
 

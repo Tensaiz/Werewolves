@@ -15,7 +15,7 @@ BUTTON_COLOR = '#4e0f11'
 BUTTON_HOVER_COLOR = '#3E090B'
 
 
-class UI(ctk.CTk):
+class MainUI(ctk.CTk):
     def __init__(self, controller):
         super().__init__(fg_color=ROOT_BACKGROUND)
         self.controller = controller

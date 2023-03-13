@@ -5,48 +5,12 @@ from threading import Timer
 import time
 import uuid
 import random
+from game.player import Player
 from game.role import Role
-from game.config import GameConfig
-
-"""
-Game agenda
-
-0 Discussion + voting: x secs
-
-1 Mini-transition: 3 secs
-
-Announcement base vote
-
-Transition: 5 secs
-
-2 Werewolf voting: y secs
-
-3 Transition: 5 secs
-
-Announcement werewolf vote
-
-Mini-transition: 3 secs
-"""
-
-"""
-Roles
-0: villager
-1: werewolf
-"""
+from game.config import Config
 
 
-class Player():
-    def __init__(self, name, id, client) -> None:
-        self.name = name
-        self.id = id
-        self.client = client
-        self.role = None
-        self.is_alive = True
-        self.is_muted = False
-        self.is_deafened = False
-
-
-class GameProgression():
+class Manager():
     def __init__(self, server) -> None:
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
@@ -57,7 +21,7 @@ class GameProgression():
         self.server = server
         self.round_timer = None
         self.players: List[Player] = []
-        self.config: GameConfig = GameConfig()
+        self.config: Config = Config()
 
     def process(self, message, sender):
         message = json.loads(message.decode('utf-8'))
@@ -101,7 +65,7 @@ class GameProgression():
     def register_player(self, message, sender):
         player_name = message["name"]
         player_id = str(uuid.uuid4())
-        player = Player(player_name, player_id, sender)
+        player = Player(name=player_name, id=player_id, client=sender)
         self.players.append(player)
         sender.send({
             "action": "REGISTER_PLAYER",

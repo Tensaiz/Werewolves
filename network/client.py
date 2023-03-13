@@ -13,7 +13,7 @@ PITCH_RANDOMIZER_INTERVAL = 4
 PITCH_RANDOMIZER_VALUES = (20, 75)
 
 
-class WerewolfNetworkClient:
+class Client():
     def __init__(self, host, port):
         # Network
         self.host = host

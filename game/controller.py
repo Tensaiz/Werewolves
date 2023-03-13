@@ -2,17 +2,17 @@ import json
 from ui.auth import AuthenticationUI
 from threading import Timer
 from game.role import Role
-from ui.ui import UI
-from network.client import WerewolfNetworkClient
+from ui.main import MainUI
+from network.client import Client
 from game.player import Player
 from network.message import Message
-from network.game_progression import GameProgression
-from game.config import GameConfig
+from network.manager import Manager
+from game.config import Config
 
 MIN_PLAYERS = 1
 
 
-class WerewolfClientController():
+class Controller():
     def __init__(self):
         self.game_is_finished = False
 
@@ -23,14 +23,14 @@ class WerewolfClientController():
         self.round = 0
         self.phase = 0
 
-        self.ui = UI(self)
+        self.ui = MainUI(self)
         self.ui.iconbitmap(default="resources/werewolves_icon.ico")
         self.auth_ui = AuthenticationUI(self)
         self.network_client = None
-        self.config = GameConfig()
+        self.config = Config()
         self.next_rounds = []
 
-    def set_networkclient(self, network_client: WerewolfNetworkClient):
+    def set_networkclient(self, network_client: Client):
         self.network_client = network_client
 
     def start_auth_ui(self):
@@ -52,7 +52,7 @@ class WerewolfClientController():
         self.start_ui()
 
     def create_network_client(self, ip, port):
-        self.network_client = WerewolfNetworkClient(ip, int(port))
+        self.network_client = Client(ip, int(port))
         self.network_client.set_controller(self)
         self.network_client.connect()
         self.network_client.run()
@@ -199,7 +199,7 @@ class WerewolfClientController():
             self.hunter_death_time = 0  # Hunter killed after civ vote
             self.hunter_round()
         else:
-            self.next_rounds = GameProgression.get_phases(self.players)
+            self.next_rounds = Manager.get_phases(self.players)
             self.transition_to_next_night_round()
 
     def hunter_is_alive(self):
@@ -294,7 +294,7 @@ class WerewolfClientController():
         self.update_players(message)
         if self.hunter_death_time == 0:
             # Go to night after hunter was killed after civ vote
-            self.next_rounds = GameProgression.get_phases(self.players)
+            self.next_rounds = Manager.get_phases(self.players)
             self.transition_to_next_night_round()
         else:
             # Go to civilian vote after hunter was killed at night

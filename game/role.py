@@ -1,4 +1,4 @@
-class Role:
+class Role():
     def __init__(self, role_id, **kwargs):
         self.id = role_id
         self.name = self.get_role_name_from_id(self.id)
