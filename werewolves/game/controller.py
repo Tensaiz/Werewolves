@@ -175,14 +175,19 @@ class Controller():
     def update_deafened(self, deafened):
         # Innocent never gets deafened
         if self.player.role.id == 6:
-            if deafened:
-                self.network_client.apply_effect = True
-            else:
-                self.network_client.apply_effect = False
-            return
+            transition_timer = Timer(self.config.transition_time, lambda: self.innocent_undeafen(deafened))
+            transition_timer.start()
 
         self.ui.update_deafened(deafened)
         self.network_client.update_deafened(deafened)
+
+    def innocent_undeafen(self, deafened):
+        if deafened:
+            self.network_client.apply_effect = True
+        else:
+            self.network_client.apply_effect = False
+        self.ui.update_deafened(False)
+        self.network_client.update_deafened(False)
 
     def update_muted(self, muted):
         self.ui.update_muted(muted)

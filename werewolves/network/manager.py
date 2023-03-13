@@ -52,6 +52,7 @@ class Manager():
         self.werewolf_votes = [{}]
         self.witch_votes = {}
         self.hunter_votee = None
+        self.hunter_killed = False
         self.round = 0
         self.round_timer = None
 
@@ -292,7 +293,7 @@ class Manager():
 
     def change_player_audio(self, mute):
         for player in self.players:
-            if player.role.id == 0:
+            if player.role.id != 1:
                 player.is_deafened = mute if player.is_alive else False
                 player.is_muted = mute
             if not player.is_alive:
