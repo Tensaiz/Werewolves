@@ -2,7 +2,7 @@ import json
 import socket
 import threading
 from typing import List
-from network.manager import Manager
+from werewolves.network.manager import Manager
 
 
 class Server():

@@ -1,6 +1,6 @@
 import signal
 
-from network.server import Server
+from werewolves.network.server import Server
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 

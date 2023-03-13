@@ -1,4 +1,4 @@
-from game.role import Role
+from werewolves.game.role import Role
 
 
 class Player():

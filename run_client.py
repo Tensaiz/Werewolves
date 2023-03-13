@@ -1,6 +1,6 @@
 import signal
 
-from game.controller import Controller
+from werewolves.game.controller import Controller
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 

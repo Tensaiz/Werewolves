@@ -5,9 +5,9 @@ from threading import Timer
 import time
 import uuid
 import random
-from game.player import Player
-from game.role import Role
-from game.config import Config
+from werewolves.game.player import Player
+from werewolves.game.role import Role
+from werewolves.game.config import Config
 
 
 class Manager():

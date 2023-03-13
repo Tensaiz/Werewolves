@@ -6,7 +6,7 @@ import pyaudio
 import json
 import base64
 import numpy as np
-from game.utils import Utils
+from werewolves.game.utils import Utils
 
 MAX_STREAM_POOL = 32
 PITCH_RANDOMIZER_INTERVAL = 4

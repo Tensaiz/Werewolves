@@ -1,9 +1,9 @@
 import tkinter
 from PIL import Image
 import customtkinter as ctk
-from game.role import Role
-import game.controller as cc
-from ui.config import ConfigurationUI
+from werewolves.game.role import Role
+import werewolves.game.controller as cc
+from werewolves.ui.config import ConfigurationUI
 
 ROOT_BACKGROUND = '#101010'
 SCROLLABLE_FRAME_COLOR = '#222020'

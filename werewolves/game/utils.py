@@ -1,6 +1,6 @@
 import random
 from typing import List
-from game.player import Player
+from werewolves.game.player import Player
 import numpy as np
 
 

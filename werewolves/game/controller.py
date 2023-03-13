@@ -1,13 +1,13 @@
 import json
-from ui.auth import AuthenticationUI
+from werewolves.ui.auth import AuthenticationUI
 from threading import Timer
-from game.role import Role
-from ui.main import MainUI
-from network.client import Client
-from game.player import Player
-from network.message import Message
-from network.manager import Manager
-from game.config import Config
+from werewolves.game.role import Role
+from werewolves.ui.main import MainUI
+from werewolves.network.client import Client
+from werewolves.game.player import Player
+from werewolves.network.message import Message
+from werewolves.network.manager import Manager
+from werewolves.game.config import Config
 
 MIN_PLAYERS = 1
 
