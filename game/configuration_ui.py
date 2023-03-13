@@ -42,7 +42,10 @@ class ConfigurationUI(ctk.CTkToplevel):
             setattr(self, var_name, tkinter.StringVar(self, value=self.controller.config.get(setting).capitalize()))
             combobox_label = ctk.CTkLabel(self, text=setting_name)
             combobox_label.grid(row=1 + i, column=0, pady=(5, 5), padx=(25, 25), sticky="w", columnspan=2)
-            combobox = ctk.CTkComboBox(self, values=capitalized_options, variable=getattr(self, var_name))
+            combobox = ctk.CTkOptionMenu(self, values=capitalized_options, variable=getattr(self, var_name),
+                                         fg_color=ctk.ThemeManager.theme["CTkComboBox"]["fg_color"],
+                                         button_color=ctk.ThemeManager.theme["CTkComboBox"]["button_color"],
+                                         button_hover_color=ctk.ThemeManager.theme["CTkComboBox"]["button_hover_color"])
             combobox.grid(row=1 + i, column=1, pady=(5, 5), padx=(25, 25), sticky="w", columnspan=2)
             setattr(self, f"{setting}_combobox", combobox)
 
