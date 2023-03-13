@@ -51,6 +51,8 @@ class GameProgression():
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
         self.witch_votes = {}
+        self.hunter_votee = None
+        self.hunter_killed = False
         self.round = 0
         self.server = server
         self.round_timer = None
@@ -70,6 +72,8 @@ class GameProgression():
             self.vote("werewolf", message)
         elif message["action"] == "WITCH_VOTE":
             self.witch_vote(message)
+        elif message["action"] == "HUNTER_VOTE":
+            self.hunter_vote(message)
         elif message["action"] == "UPDATE_CONFIG":
             self.update_config(message)
         elif message["action"] == "NEW_GAME":
@@ -83,6 +87,7 @@ class GameProgression():
         self.base_votes = [{}]
         self.werewolf_votes = [{}]
         self.witch_votes = {}
+        self.hunter_votee = None
         self.round = 0
         self.round_timer = None
 
@@ -138,6 +143,10 @@ class GameProgression():
 
         if self.game_finished():
             return
+
+        if self.hunter_killed:
+            self.hunter_round()
+            self.hunter_killed = False
 
         self.round_timer = Timer(self.config.base_round_time, lambda: self.finish_voting("base"))
         self.round_timer.start()
@@ -204,6 +213,9 @@ class GameProgression():
         elif "kill" in message.keys():
             self.witch_votes["kill"] = message["kill"]
 
+    def hunter_vote(self, message):
+        self.hunter_votee = message["selected_player_id"]
+
     def finish_voting(self, type: str):
         self.round_timer = None
         votee = self.calculate_votee(type)
@@ -237,6 +249,11 @@ class GameProgression():
         if type == "base":
             # Transition to next night voting phase
             time.sleep(self.config.transition_time)
+
+            if self.hunter_killed:
+                # Hunter turn
+                self.hunter_round()
+
             # Wait for Seer to view a role on client side
             if 0 in night_rounds:
                 time.sleep(self.config.role_decide_time + self.config.transition_time)
@@ -252,11 +269,15 @@ class GameProgression():
 
             if 2 in night_rounds:
                 # Witch turn
-                witch_timer = Timer(self.config.role_decide_time + self.config.transition_time, lambda: self.finish_witch_voting())
+                witch_timer = Timer(self.config.role_decide_time, lambda: self.finish_witch_voting())
                 witch_timer.start()
             else:
                 # Update player muted status and broadcast
                 self.start_round()
+
+    def hunter_round(self):
+        hunter_timer = Timer(self.config.role_decide_time, lambda: self.finish_hunter_voting())
+        hunter_timer.start()
 
     def finish_witch_voting(self):
         time.sleep(self.config.transition_time)
@@ -286,6 +307,25 @@ class GameProgression():
         })
         self.start_round()
 
+    def finish_hunter_voting(self):
+        time.sleep(self.config.transition_time)
+
+        if not self.hunter_votee:
+            return
+
+        hunter_player = Role.get_players_by_role(self.players, 3)[0]
+        hunter_player.role.bullet = 0
+        self.kill_player(self.hunter_votee)
+
+        if self.game_finished():
+            return
+
+        action_name = "FINISH_HUNTER_VOTE"
+        self.server.broadcast({
+            "action": action_name,
+            "players": self.map_players()
+        })
+
     def change_player_audio(self, mute):
         for player in self.players:
             if player.role.id == 0:
@@ -303,6 +343,8 @@ class GameProgression():
     def kill_player(self, player_id):
         for player in self.players:
             if player.id == player_id:
+                if player.role.id == 3:
+                    self.hunter_killed = True
                 player.is_alive = False
                 break
 
