@@ -369,7 +369,10 @@ class GameProgression():
                 return most_common[0][0]
 
     def assign_roles(self):
-        no_of_werewolves = len(self.players) // 4
+        if self.config.number_of_werewolves == "auto":
+            no_of_werewolves = len(self.players) // 4
+        else:
+            no_of_werewolves = int(self.config.number_of_werewolves)
         no_of_seer = self.config.seer_role
         no_of_hunter = self.config.hunter_role
         no_of_inno = self.config.innocent_role

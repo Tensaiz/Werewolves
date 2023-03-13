@@ -13,6 +13,9 @@ TIME_SETTINGS = {
     "transition_time": "transition_time",
     "role_time": "role_decide_time"
 }
+DROPDOWN_SETTINGS = {
+    "number_of_werewolves": ["Auto", "1", "2", "3", "4", "5", "6"]
+}
 
 
 class ConfigurationUI(ctk.CTkToplevel):
@@ -25,30 +28,42 @@ class ConfigurationUI(ctk.CTkToplevel):
         self.minsize(340, 500)
         self.maxsize(360, 600)
 
-        total_rows = len(CHECKBOX_SETTINGS) + len(TIME_SETTINGS) + 2
+        total_rows = len(CHECKBOX_SETTINGS) + len(DROPDOWN_SETTINGS) + len(TIME_SETTINGS) + 2
         self.grid_rowconfigure(tuple(range(total_rows)), weight=1)
         self.grid_columnconfigure((0, 1), weight=1)
 
         self.title_label = ctk.CTkLabel(self, text="Game settings", font=ctk.CTkFont(size=21, weight="bold"))
         self.title_label.grid(row=0, column=0, pady=(25, 25), padx=(25, 25), sticky="w", columnspan=2)
 
+        for i, setting in enumerate(DROPDOWN_SETTINGS):
+            var_name = f"{setting}_var"
+            setting_name = setting.replace("_", " ").capitalize()
+            capitalized_options = [option.capitalize() for option in DROPDOWN_SETTINGS[setting]]
+            setattr(self, var_name, tkinter.StringVar(self, value=self.controller.config.get(setting).capitalize()))
+            combobox_label = ctk.CTkLabel(self, text=setting_name)
+            combobox_label.grid(row=1 + i, column=0, pady=(5, 5), padx=(25, 25), sticky="w", columnspan=2)
+            combobox = ctk.CTkComboBox(self, values=capitalized_options, variable=getattr(self, var_name))
+            combobox.grid(row=1 + i, column=1, pady=(5, 5), padx=(25, 25), sticky="w", columnspan=2)
+            setattr(self, f"{setting}_combobox", combobox)
+
+        from_row = len(DROPDOWN_SETTINGS) - 1
         for i, setting in enumerate(TIME_SETTINGS.keys()):
             var_name = f"{setting}_var"
             setting_name = setting.replace("_", " ").capitalize()
             setattr(self, var_name, tkinter.StringVar(self, value=f"{self.controller.config.get(TIME_SETTINGS[setting])}"))
             label = ctk.CTkLabel(self, text=(setting_name + " (s)"))
-            label.grid(row=1 + i, column=0, pady=(5, 5), padx=(25, 25), sticky="w")
+            label.grid(row=2 + from_row + i, column=0, pady=(5, 5), padx=(25, 25), sticky="w")
             entry = ctk.CTkEntry(self, textvariable=getattr(self, var_name), placeholder_text=setting_name)
-            entry.grid(row=1 + i, column=1, pady=(5, 5), padx=(25, 25))
+            entry.grid(row=2 + from_row + i, column=1, pady=(5, 5), padx=(25, 25))
             setattr(self, f"{setting}_entry", entry)
 
-        from_row = len(CHECKBOX_SETTINGS) - 1
+        from_row = len(DROPDOWN_SETTINGS) + len(TIME_SETTINGS) - 1
         for i, setting in enumerate(CHECKBOX_SETTINGS):
             var_name = f"{setting}_var"
             setting_name = setting.replace("_", " ").capitalize()
-            setattr(self, var_name, tkinter.BooleanVar(self, value=self.controller.config.get(setting)))  # tkinter.StringVar(self, value="on"))
+            setattr(self, var_name, tkinter.BooleanVar(self, value=self.controller.config.get(setting)))
             checkbox = ctk.CTkCheckBox(self, variable=getattr(self, var_name), text=setting_name, onvalue=True, offvalue=False, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR)
-            checkbox.grid(row=from_row + i, column=0, pady=(5, 5), padx=(25, 25), sticky="w", columnspan=2)
+            checkbox.grid(row=2 + from_row + i, column=0, pady=(5, 5), padx=(25, 25), sticky="w", columnspan=2)
             setattr(self, f"{setting}_checkbox", checkbox)
 
         self.finish_button = ctk.CTkButton(self, text="Save", font=ctk.CTkFont(size=12, weight="bold"), fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR, command=self.save_configuration)
@@ -69,6 +84,11 @@ class ConfigurationUI(ctk.CTkToplevel):
         for setting in CHECKBOX_SETTINGS:
             var_name = f"{setting}_var"
             var_value = getattr(self, var_name).get()
+            self.controller.config.set(setting, var_value)
+
+        for setting in DROPDOWN_SETTINGS:
+            var_name = f"{setting}_var"
+            var_value = getattr(self, var_name).get().lower()
             self.controller.config.set(setting, var_value)
 
         self.controller.update_config()

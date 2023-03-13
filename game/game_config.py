@@ -3,6 +3,8 @@ import json
 
 class GameConfig():
     def __init__(self):
+        self.number_of_werewolves = "auto"
+
         self.hide_deaths = False
         self.seer_role = False
         self.witch_role = False
