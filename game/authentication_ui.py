@@ -14,8 +14,8 @@ class AuthenticationUI(ctk.CTkToplevel):
         self.connecting = False
         self.geometry("320x320")
         self.title("Werewolves connector")
-        self.minsize(250, 350)
-        self.maxsize(350, 390)
+        self.minsize(300, 300)
+        self.maxsize(340, 340)
 
         self.protocol("WM_DELETE_WINDOW", self.quit)
 
