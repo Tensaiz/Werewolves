@@ -1,6 +1,6 @@
 import signal
 
-from game.client_controller import WerewolfClientController
+from game.controller import WerewolfClientController
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 

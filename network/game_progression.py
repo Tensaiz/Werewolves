@@ -6,7 +6,7 @@ import time
 import uuid
 import random
 from game.role import Role
-from game.game_config import GameConfig
+from game.config import GameConfig
 
 """
 Game agenda

@@ -2,8 +2,8 @@ import tkinter
 from PIL import Image
 import customtkinter as ctk
 from game.role import Role
-import game.client_controller as cc
-from game.configuration_ui import ConfigurationUI
+import game.controller as cc
+from ui.config import ConfigurationUI
 
 ROOT_BACKGROUND = '#101010'
 SCROLLABLE_FRAME_COLOR = '#222020'

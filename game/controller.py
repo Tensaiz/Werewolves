@@ -1,13 +1,13 @@
 import json
-from game.authentication_ui import AuthenticationUI
+from ui.auth import AuthenticationUI
 from threading import Timer
 from game.role import Role
-from game.ui import UI
+from ui.ui import UI
 from network.client import WerewolfNetworkClient
 from game.player import Player
-from game.message import Message
+from network.message import Message
 from network.game_progression import GameProgression
-from game.game_config import GameConfig
+from game.config import GameConfig
 
 MIN_PLAYERS = 1
 
@@ -196,7 +196,7 @@ class WerewolfClientController():
         self.update_players(message)
         # Hunter has died
         if hunter_status != self.hunter_is_alive():
-            self.hunter_death_time = 0 # Hunter killed after civ vote
+            self.hunter_death_time = 0  # Hunter killed after civ vote
             self.hunter_round()
         else:
             self.next_rounds = GameProgression.get_phases(self.players)
@@ -278,9 +278,8 @@ class WerewolfClientController():
             self.update_players(message)
             # Hunter has died
             if hunter_status != self.hunter_is_alive():
-                self.hunter_death_time = 1 # Hunter killed after civ vote
+                self.hunter_death_time = 1  # Hunter killed after civ vote
                 self.hunter_round()
-                
         self.handle_night_vote(message)
 
     def handle_witch_vote_finished(self, message):
