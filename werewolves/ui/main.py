@@ -250,8 +250,7 @@ class MainUI(ctk.CTk):
 
     def remove_voting_marks(self):
         for player_frame in self.player_frame_list:
-            if player_frame.player.is_alive:
-                player_frame.configure(fg_color=PLAYER_FRAME_COLOR)
+            player_frame.configure(fg_color=PLAYER_FRAME_COLOR)
 
     def show_final_game_ui(self, winning_team):
         for player_frame in self.player_frame_list:

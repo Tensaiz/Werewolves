@@ -100,14 +100,18 @@ class Controller():
 
     def handle_message(self, message):
         message = Message(**message)
+        print(message.action)
         if message.action == "START_GAME":
             self.start_game_server(message)
+            self.ui.update_window()
         elif message.action == "REGISTER_PLAYER":
             # receive id: [id]
             self.set_id(message)
+            self.ui.update_window()
         elif message.action == "PREGAME_OVERVIEW":
             # players: dict[] w/ keys id, name
             self.update_pregame_lobby(message)
+            self.ui.update_window()
         elif message.action == "FINISH_BASE_VOTE":
             # action, result (1 decisive, else 0), votee (votee name)
             # players
@@ -126,8 +130,6 @@ class Controller():
             self.phase = 10
             self.game_is_finished = True
             self.finalize_game_ui(message)
-            return
-        self.ui.update_window()
 
     def start_game_server(self, message):
         self.ui.is_pregame_lobby = False
@@ -202,7 +204,7 @@ class Controller():
     def handle_base_vote_finish(self, message):
         self.phase = -1
         self.remove_voting_ui()
-
+        self.ui.update_window()
         hunter_status = self.hunter_is_alive()
         self.update_players(message)
         # Hunter has died
@@ -239,6 +241,7 @@ class Controller():
             role_round = self.witch_round
         else:
             self.ui.update_window()
+            print('Night over, civ round')
             role_round = self.reset_round
 
         self.start_transition(role_round)
@@ -293,6 +296,7 @@ class Controller():
 
     def handle_werewolf_vote(self, message):
         self.werewolf_votee = message.votee
+        # If no witch round
         if 2 not in self.next_rounds:
             hunter_status = self.hunter_is_alive()
             self.update_players(message)
@@ -300,6 +304,7 @@ class Controller():
             if hunter_status != self.hunter_is_alive():
                 self.hunter_death_time = 1  # Hunter killed after civ vote
                 self.hunter_round()
+                return
         self.handle_night_vote(message)
 
     def handle_witch_vote_finished(self, message):
@@ -312,6 +317,7 @@ class Controller():
         self.phase = -1
         self.remove_voting_ui()
         self.update_players(message)
+        self.ui.update_window()
         if self.hunter_death_time == 0:
             # Go to night after hunter was killed after civ vote
             self.next_rounds = Manager.get_phases(self.players)
@@ -348,8 +354,10 @@ class Controller():
                 self.compare_and_update_own_state(player)
 
     def can_vote_on(self, votee):
+        # Hunter can shoot anyone who's alive if he has a bullet even if he's dead
         if self.phase == 4 and self.player.role.id == 3 and self.player.role.bullet == 1 and votee.is_alive:
             return True
+        # Normally you cannot vote on anyone if you are dead or the person you want to vote on is dead
         elif not (self.player.is_alive and votee.is_alive and not self.game_is_finished):
             return False
         # Witch at night to save werewolf votee

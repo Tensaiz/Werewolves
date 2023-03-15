@@ -16,7 +16,7 @@ class Manager():
         self.werewolf_votes = [{}]
         self.witch_votes = {}
         self.hunter_votee = None
-        self.hunter_killed = False
+        self.hunter_can_kill = False
         self.round = 0
         self.server = server
         self.round_timer = None
@@ -52,7 +52,7 @@ class Manager():
         self.werewolf_votes = [{}]
         self.witch_votes = {}
         self.hunter_votee = None
-        self.hunter_killed = False
+        self.hunter_can_kill = False
         self.round = 0
         self.round_timer = None
 
@@ -109,9 +109,9 @@ class Manager():
         if self.game_finished():
             return
 
-        if self.hunter_killed:
+        if self.hunter_can_kill:
             self.hunter_round()
-            self.hunter_killed = False
+            self.hunter_can_kill = False
 
         self.round_timer = Timer(self.config.base_round_time, lambda: self.finish_voting("base"))
         self.round_timer.start()
@@ -215,9 +215,10 @@ class Manager():
             # Transition to next night voting phase
             time.sleep(self.config.transition_time)
 
-            if self.hunter_killed:
+            if self.hunter_can_kill:
                 # Hunter turn
                 self.hunter_round()
+                self.hunter_can_kill = False
 
             # Wait for Seer to view a role on client side
             if 0 in night_rounds:
@@ -234,15 +235,16 @@ class Manager():
 
             if 2 in night_rounds:
                 # Witch turn
-                witch_timer = Timer(self.config.role_decide_time, lambda: self.finish_witch_voting())
+                witch_timer = Timer(self.config.role_decide_time, self.finish_witch_voting)
                 witch_timer.start()
             else:
                 # Update player muted status and broadcast
                 self.start_round()
 
     def hunter_round(self):
-        hunter_timer = Timer(self.config.role_decide_time, lambda: self.finish_hunter_voting())
-        hunter_timer.start()
+        time.sleep(self.config.role_decide_time - self.config.transition_time)
+        self.finish_hunter_voting()
+        time.sleep(self.config.transition_time)
 
     def finish_witch_voting(self):
         time.sleep(self.config.transition_time)
@@ -273,8 +275,6 @@ class Manager():
         self.start_round()
 
     def finish_hunter_voting(self):
-        time.sleep(self.config.transition_time)
-
         if not self.hunter_votee:
             return
 
@@ -309,7 +309,7 @@ class Manager():
         for player in self.players:
             if player.id == player_id:
                 if player.role.id == 3:
-                    self.hunter_killed = True
+                    self.hunter_can_kill = True
                 player.is_alive = False
                 break
 
