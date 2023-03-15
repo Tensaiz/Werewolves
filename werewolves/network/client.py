@@ -109,7 +109,7 @@ class Client():
 
                         if sender_id != self.controller.player.id:
                             if message_obj["status"] == 0:
-                                self.controller.ui.mark_player_speaking(sender_id)
+                                self.controller.mark_player_speaking(sender_id)
                                 audio_bytes = base64.b64decode(message_obj['data'])
 
                                 # audio effect

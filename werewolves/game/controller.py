@@ -1,4 +1,5 @@
 import json
+from werewolves.game.utils import Utils
 from werewolves.ui.auth import AuthenticationUI
 from threading import Timer
 from werewolves.game.role import Role
@@ -172,6 +173,11 @@ class Controller():
     def update_living(self, is_alive):
         self.ui.update_living(is_alive)
 
+    def mark_player_speaking(self, sender_id):
+        # Players can only see each other speaking if they're werewolves or if they're voting as civilians
+        if self.phase == 0 or (self.phase == 1 and self.player.role.id == 1 and Utils.get_player_by_id(sender_id).role.id == 1):
+            self.ui.mark_player_speaking(sender_id)
+
     def update_deafened(self, deafened):
         # Innocent never gets deafened
         if self.player.role.id == 6:
@@ -235,8 +241,13 @@ class Controller():
             self.ui.update_window()
             role_round = self.reset_round
 
+        self.start_transition(role_round)
+
+    def start_transition(self, to_round):
+        if self.player.is_alive:
+            self.update_deafened(True)
         self.ui.update_timer(self.config.transition_time)
-        transition_timer = Timer(self.config.transition_time, role_round)
+        transition_timer = Timer(self.config.transition_time, to_round)
         transition_timer.start()
 
     def werewolves_voting(self):
@@ -244,6 +255,9 @@ class Controller():
             return
 
         self.phase = 1
+
+        if self.player.role.id == 1:
+            self.update_deafened(False)
 
         self.ui.update_timer(self.config.werewolf_round_time)
         self.ui.update_window()
@@ -273,6 +287,7 @@ class Controller():
     def reset_round(self):
         self.round += 1
         self.phase = 0
+        self.update_deafened(self.player.is_deafened)
         self.ui.update_window()
         self.ui.update_timer(self.config.base_round_time)
 
